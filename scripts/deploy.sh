@@ -4,6 +4,7 @@ set -euo pipefail
 REPO_DIR="${REPO_DIR:-/opt/homelab}"
 BRANCH="${BRANCH:-main}"
 COMPOSE_FILES="${COMPOSE_FILES:-docker-compose.yml}"
+PROFILE_STRING="${COMPOSE_PROFILES:-}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is not installed or not in PATH."
@@ -29,17 +30,42 @@ fi
 git pull --ff-only origin "$BRANCH"
 
 declare -a COMPOSE_ARGS
+declare -a PROFILE_ARGS
 IFS=':' read -r -a COMPOSE_FILE_ARRAY <<< "$COMPOSE_FILES"
 for compose_file in "${COMPOSE_FILE_ARRAY[@]}"; do
   COMPOSE_ARGS+=(-f "$compose_file")
 done
 
+if [[ -z "$PROFILE_STRING" && -f .env ]]; then
+  PROFILE_STRING="$(grep -E '^COMPOSE_PROFILES=' .env | tail -n 1 || true)"
+  PROFILE_STRING="${PROFILE_STRING#COMPOSE_PROFILES=}"
+  PROFILE_STRING="${PROFILE_STRING%\"}"
+  PROFILE_STRING="${PROFILE_STRING#\"}"
+  PROFILE_STRING="${PROFILE_STRING%\'}"
+  PROFILE_STRING="${PROFILE_STRING#\'}"
+fi
+
+PROFILE_STRING="${PROFILE_STRING// /}"
+if [[ -n "$PROFILE_STRING" ]]; then
+  IFS=',' read -r -a PROFILE_ARRAY <<< "$PROFILE_STRING"
+  for profile in "${PROFILE_ARRAY[@]}"; do
+    if [[ -n "$profile" ]]; then
+      PROFILE_ARGS+=(--profile "$profile")
+    fi
+  done
+fi
+
+if [[ "${#PROFILE_ARGS[@]}" -gt 0 ]]; then
+  echo "[deploy] Enabling profiles: $PROFILE_STRING"
+else
+  echo "[deploy] No optional profiles enabled"
+fi
+
 echo "[deploy] Pulling available images"
-docker compose "${COMPOSE_ARGS[@]}" --env-file .env pull --ignore-pull-failures
+docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env pull --ignore-pull-failures
 
 echo "[deploy] Applying stack changes"
-docker compose "${COMPOSE_ARGS[@]}" --env-file .env up -d --build --remove-orphans
+docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env up -d --build --remove-orphans
 
 echo "[deploy] Current status"
-docker compose "${COMPOSE_ARGS[@]}" --env-file .env ps
-
+docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env ps

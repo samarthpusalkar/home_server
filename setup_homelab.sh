@@ -66,7 +66,7 @@ chmod +x "$HOMELAB_ROOT"/scripts/*.sh 2>/dev/null || true
 
 echo "Done!"
 echo "Next steps:"
-echo "1) Fill in /opt/homelab/.env"
-echo "2) Set Cloudflare tunnel wildcard to http://traefik:80"
+echo "1) Fill in /opt/homelab/.env and choose COMPOSE_PROFILES"
+echo "2) If using public-http, set Cloudflare tunnel wildcard to http://traefik:80"
 echo "3) Configure GitHub runner with /opt/homelab/scripts/setup_github_runner.sh"
 echo "4) Run /opt/homelab/scripts/deploy.sh"
