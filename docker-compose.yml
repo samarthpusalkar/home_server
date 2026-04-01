@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+
+  minecraft:
+    image: itzg/minecraft-server:latest
+    container_name: minecraft
+    environment:
+      EULA: "TRUE"
+      MEMORY: "2G"
+      # Additional settings can be passed here or via an env_file
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+    volumes:
+      - ./data/minecraft:/data
+    ports:
+      - "25565:25565"
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2G
+    volumes:
+      - ./data/ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    volumes:
+      - ./data/openwebui:/app/backend/data
+    ports:
+      - "3000:8080"
+    restart: unless-stopped
+
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    volumes:
+      - ./data/nextcloud:/var/www/html
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TOKEN}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    restart: unless-stopped
+
+  playit:
+    image: playitapp/playit:latest
+    container_name: playit
+    network_mode: host
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+    volumes:
+      - ./data/playit:/data
+    restart: unless-stopped
