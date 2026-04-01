@@ -32,7 +32,7 @@ Traefik then routes each path to the right container.
 
 When you use a Quick Tunnel instead of an owned-domain Cloudflare tunnel, `cloudflared` runs on the Pi host as a `systemd` service and points at:
 
-- `http://127.0.0.1:80`
+- `http://127.0.0.1:8089` by default
 
 ## What Auto-Updates
 
@@ -184,6 +184,8 @@ This host-level Quick Tunnel is separate from the Docker `cloudflared` container
 
 - Quick Tunnel without a domain: `COMPOSE_PROFILES=public-http`
 - Owned-domain Cloudflare tunnel: `COMPOSE_PROFILES=public-http,managed-cloudflare`
+
+If port `80` on the Pi is already taken by StellarMate or another service, that is fine. Traefik now defaults to host port `8089`, controlled by `TRAEFIK_HOST_PORT`, and the Quick Tunnel defaults to `http://127.0.0.1:8089`.
 
 ## One-Time GitHub Runner Setup (On Pi)
 

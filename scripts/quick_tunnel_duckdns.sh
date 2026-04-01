@@ -61,6 +61,9 @@ read_env_value() {
 }
 
 refresh_config() {
+  local traefik_host_port=""
+
+  traefik_host_port="$(read_env_value TRAEFIK_HOST_PORT "8089")"
   STATE_DIR="$(read_env_value QUICK_TUNNEL_STATE_DIR "$HOMELAB_ROOT/.quick-tunnel")"
   STATE_DIR="$(expand_path "$STATE_DIR")"
   PID_FILE="$STATE_DIR/cloudflared.pid"
@@ -68,7 +71,7 @@ refresh_config() {
   URL_FILE="$STATE_DIR/current_url.txt"
   LAST_PUBLISHED_URL_FILE="$STATE_DIR/last_published_url.txt"
   DUCKDNS_RESPONSE_FILE="$STATE_DIR/duckdns-response.txt"
-  LOCAL_URL="${COMMAND_ARG:-$(read_env_value QUICK_TUNNEL_LOCAL_URL "http://127.0.0.1:80")}"
+  LOCAL_URL="${COMMAND_ARG:-$(read_env_value QUICK_TUNNEL_LOCAL_URL "http://127.0.0.1:${traefik_host_port}")}"
   TUNNEL_TIMEOUT_SECONDS="$(read_env_value TUNNEL_TIMEOUT_SECONDS "60")"
   TARGET_WAIT_SECONDS="$(read_env_value QUICK_TUNNEL_TARGET_WAIT_SECONDS "300")"
   CHECK_INTERVAL_SECONDS="$(read_env_value QUICK_TUNNEL_CHECK_INTERVAL_SECONDS "10")"
@@ -94,7 +97,7 @@ Usage:
   scripts/quick_tunnel_duckdns.sh publish-txt [quick_tunnel_url]
 
 Environment or .env values:
-  QUICK_TUNNEL_LOCAL_URL=http://127.0.0.1:80
+  QUICK_TUNNEL_LOCAL_URL=http://127.0.0.1:8089
   QUICK_TUNNEL_STATE_DIR=~/homelab/.quick-tunnel
   QUICK_TUNNEL_TARGET_WAIT_SECONDS=300
   QUICK_TUNNEL_CHECK_INTERVAL_SECONDS=10
