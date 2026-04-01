@@ -5,7 +5,7 @@
 if [ "$1" == "start" ]; then
     echo "Starting Astrophotography Session..."
     echo "Pausing non-essential containers..."
-    docker pause minecraft openwebui ollama nextcloud cloudflared playit 2>/dev/null || echo "Some containers were not running."
+    docker pause minecraft openwebui ollama nextcloud cloudflared playit traefik 2>/dev/null || echo "Some containers were not running."
     
     # Optionally lower Docker daemon priority to keep host CPU clear
     # pgrep dockerd gets the docker daemon PID
@@ -19,7 +19,7 @@ if [ "$1" == "start" ]; then
 elif [ "$1" == "stop" ]; then
     echo "Ending Astrophotography Session..."
     echo "Unpausing containers..."
-    docker unpause minecraft openwebui ollama nextcloud cloudflared playit 2>/dev/null || echo "Some containers were not paused."
+    docker unpause minecraft openwebui ollama nextcloud cloudflared playit traefik 2>/dev/null || echo "Some containers were not paused."
     
     # Restore normal priority
     DOCKER_PID=$(pgrep dockerd || true)

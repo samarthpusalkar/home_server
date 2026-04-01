@@ -1,0 +1,36 @@
+name: Deploy Homelab
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/deploy-homelab.yml"
+      - "docker-compose.yml"
+      - "scripts/**"
+      - "services/**"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-homelab
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on:
+      - self-hosted
+      - linux
+      - arm64
+      - homelab
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Raspberry Pi
+        env:
+          REPO_DIR: /opt/homelab
+          BRANCH: main
+          COMPOSE_FILES: docker-compose.yml
+        run: bash ./scripts/deploy.sh
+

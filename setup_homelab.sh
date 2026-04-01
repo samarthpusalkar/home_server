@@ -6,7 +6,9 @@ HOMELAB_ROOT=/opt/homelab
 echo "=== RPi Homelab Setup for StellarMate ==="
 echo "Installing Docker, Docker Compose, and gocryptfs..."
 sudo apt update
-sudo apt install -y docker.io docker-compose gocryptfs
+if ! sudo apt install -y docker.io docker-compose-plugin gocryptfs; then
+  sudo apt install -y docker.io docker-compose gocryptfs
+fi
 
 echo "Setting up Docker permissions..."
 if ! groups $USER | grep -q '\bdocker\b'; then
@@ -24,6 +26,8 @@ cp docker-compose.yml "$HOMELAB_ROOT/"
 cp astro_session.sh "$HOMELAB_ROOT/"
 cp encryption_setup.sh "$HOMELAB_ROOT/"
 cp .env.example "$HOMELAB_ROOT/"
+cp -R scripts "$HOMELAB_ROOT/"
+cp README.md "$HOMELAB_ROOT/" 2>/dev/null || true
 if [ ! -f "$HOMELAB_ROOT/.env" ]; then
   cp "$HOMELAB_ROOT/.env.example" "$HOMELAB_ROOT/.env"
 fi
@@ -58,5 +62,11 @@ sudo chown -R $USER:$USER "$HOMELAB_ROOT"
 sudo chown -R $USER:$USER "$DATA_ROOT_PATH"
 
 chmod +x "$HOMELAB_ROOT"/*.sh
+chmod +x "$HOMELAB_ROOT"/scripts/*.sh 2>/dev/null || true
 
-echo "Done! Make sure you fill in /opt/homelab/.env and run ./encryption_setup.sh BEFORE starting docker-compose."
+echo "Done!"
+echo "Next steps:"
+echo "1) Fill in /opt/homelab/.env"
+echo "2) Set Cloudflare tunnel wildcard to http://traefik:80"
+echo "3) Configure GitHub runner with /opt/homelab/scripts/setup_github_runner.sh"
+echo "4) Run /opt/homelab/scripts/deploy.sh"
