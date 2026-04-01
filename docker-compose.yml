@@ -7,8 +7,9 @@ services:
     container_name: minecraft
     environment:
       EULA: "TRUE"
-      MEMORY: "2G"
-      # Additional settings can be passed here or via an env_file
+      MEMORY: ${MC_MEMORY:-2G}
+      TYPE: ${MC_TYPE:-VANILLA}
+      VERSION: ${MC_VERSION:-LATEST}
     deploy:
       resources:
         limits:
@@ -17,7 +18,7 @@ services:
         reservations:
           memory: 512M
     volumes:
-      - ./data/minecraft:/data
+      - ${DATA_ROOT:-./data}/minecraft:/data
     ports:
       - "25565:25565"
     restart: unless-stopped
@@ -31,7 +32,7 @@ services:
           cpus: "1.5"
           memory: 2G
     volumes:
-      - ./data/ollama:/root/.ollama
+      - ${DATA_ROOT:-./data}/ollama:/root/.ollama
     ports:
       - "11434:11434"
     restart: unless-stopped
@@ -43,13 +44,14 @@ services:
       - ollama
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
     deploy:
       resources:
         limits:
           cpus: "1.0"
           memory: 1G
     volumes:
-      - ./data/openwebui:/app/backend/data
+      - ${DATA_ROOT:-./data}/openwebui:/app/backend/data
     ports:
       - "3000:8080"
     restart: unless-stopped
@@ -57,13 +59,17 @@ services:
   nextcloud:
     image: nextcloud:latest
     container_name: nextcloud
+    environment:
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS}
     deploy:
       resources:
         limits:
           cpus: "1.0"
           memory: 1G
     volumes:
-      - ./data/nextcloud:/var/www/html
+      - ${DATA_ROOT:-./data}/nextcloud:/var/www/html
     ports:
       - "8081:80"
     restart: unless-stopped
@@ -85,11 +91,13 @@ services:
     image: playitapp/playit:latest
     container_name: playit
     network_mode: host
+    environment:
+      SECRET_KEY: ${PLAYIT_SECRET_KEY}
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 128M
     volumes:
-      - ./data/playit:/data
+      - ${DATA_ROOT:-./data}/playit:/data
     restart: unless-stopped
