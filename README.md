@@ -9,11 +9,12 @@ Your GitHub repo name (`home_server`) and local folder name (`homelab` or `~/hom
 Optional public-facing pieces are disabled unless you turn them on in `~/homelab/.env`:
 
 - empty `COMPOSE_PROFILES` = local-only stack
+- `COMPOSE_PROFILES=local-ollama` = run Ollama inside Docker on the Pi
 - `COMPOSE_PROFILES=public-game` = enable Playit for games like Minecraft
 - `COMPOSE_PROFILES=public-http` = enable Traefik for path-based local HTTP routing
 - `COMPOSE_PROFILES=managed-cloudflare` = enable the Docker `cloudflared` container for owned-domain tunnels
 - `COMPOSE_PROFILES=public-game,public-http` = games + Traefik router
-- `COMPOSE_PROFILES=public-game,public-http,managed-cloudflare` = full public stack with owned-domain Cloudflare tunnel
+- `COMPOSE_PROFILES=local-ollama,public-game,public-http,managed-cloudflare` = full public stack with Docker Ollama and owned-domain Cloudflare tunnel
 
 ## Public HTTP Model
 
@@ -75,6 +76,7 @@ Set these base values:
 - `WEBUI_SECRET_KEY`
 - `NEXTCLOUD_ADMIN_USER`
 - `NEXTCLOUD_ADMIN_PASSWORD`
+- `OLLAMA_BASE_URL`
 
 Set these only if you enable `public-http`:
 
@@ -93,6 +95,32 @@ If you only want Minecraft/public game access for now, you can leave Cloudflare 
 ```bash
 COMPOSE_PROFILES=public-game
 ```
+
+## Ollama Mode
+
+This repo now defaults to using host-installed Ollama on the Raspberry Pi:
+
+- `OLLAMA_BASE_URL=http://host.docker.internal:11434`
+
+That means:
+
+- your existing host Ollama install is reused
+- any models already pulled on the Pi host are reused
+- if you signed in to Ollama on the Pi host, Open WebUI talks to that same Ollama instance
+
+If you actually want Ollama inside Docker instead, enable:
+
+```bash
+COMPOSE_PROFILES=local-ollama
+```
+
+and set:
+
+```bash
+OLLAMA_BASE_URL=http://ollama:11434
+```
+
+If you do not want Ollama at all and only want cloud AI providers, keep `local-ollama` disabled and configure those providers inside Open WebUI instead.
 
 ## One-Time Cloudflare Tunnel Setup
 

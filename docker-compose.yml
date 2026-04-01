@@ -24,6 +24,8 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
+    profiles:
+      - local-ollama
     deploy:
       resources:
         limits:
@@ -38,10 +40,10 @@ services:
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: openwebui
-    depends_on:
-      - ollama
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       WEBUI_URL: ${PUBLIC_BASE_URL:-https://home.example.com}${OPENWEBUI_PUBLIC_PATH:-/openwebui}
     deploy:
