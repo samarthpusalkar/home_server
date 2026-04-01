@@ -13,14 +13,43 @@ expand_path() {
   printf '%s\n' "$path"
 }
 
+resolve_docker_prefix() {
+  if docker info >/dev/null 2>&1; then
+    DOCKER_PREFIX=()
+    return 0
+  fi
+
+  if sudo -n docker info >/dev/null 2>&1; then
+    DOCKER_PREFIX=(sudo)
+    return 0
+  fi
+
+  if [[ -t 0 ]]; then
+    echo "[deploy] Docker needs elevated access right now; trying sudo."
+    if sudo -v && sudo docker info >/dev/null 2>&1; then
+      DOCKER_PREFIX=(sudo)
+      return 0
+    fi
+  fi
+
+  if id -nG "$USER" | grep -qw docker; then
+    echo "Docker access is still denied for $USER even though the docker group is present."
+    echo "Run 'newgrp docker' or log out and back in, then retry."
+  else
+    echo "Current user cannot access Docker."
+    echo "Run 'sudo usermod -aG docker $USER' and then log out/back in."
+  fi
+  exit 1
+}
+
 resolve_compose_cmd() {
-  if docker compose version >/dev/null 2>&1; then
-    COMPOSE_CMD=(docker compose)
+  if "${DOCKER_PREFIX[@]}" docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=("${DOCKER_PREFIX[@]}" docker compose)
     return 0
   fi
 
   if command -v docker-compose >/dev/null 2>&1; then
-    COMPOSE_CMD=(docker-compose)
+    COMPOSE_CMD=("${DOCKER_PREFIX[@]}" docker-compose)
     return 0
   fi
 
@@ -41,7 +70,9 @@ if [[ ! -d "$REPO_DIR/.git" ]]; then
   exit 1
 fi
 
+declare -a DOCKER_PREFIX
 declare -a COMPOSE_CMD
+resolve_docker_prefix
 resolve_compose_cmd
 
 cd "$REPO_DIR"
