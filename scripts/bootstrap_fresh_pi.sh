@@ -44,9 +44,10 @@ mkdir -p "$HOMELAB_ROOT/data"/{minecraft,ollama,openwebui,nextcloud,playit}
 echo "Bootstrap complete."
 echo "Next:"
 echo "1) Edit $HOMELAB_ROOT/.env with real secrets and hostnames."
-echo "2) Set up Cloudflare tunnel wildcard to http://traefik:80."
-echo "3) Install a GitHub self-hosted runner using scripts/setup_github_runner.sh."
-echo "4) Run scripts/deploy.sh once to start the stack."
+echo "2) Run scripts/deploy.sh once to start the stack."
+echo "3) If using owned-domain Cloudflare Tunnel, set it to http://traefik:80."
+echo "4) If using Quick Tunnel, run scripts/setup_quick_tunnel_service.sh."
+echo "5) Install a GitHub self-hosted runner using scripts/setup_github_runner.sh."
 
 if [[ "$NEEDS_RELOGIN" -eq 1 ]]; then
   echo "You were added to the docker group. Log out and back in (or run: newgrp docker)."

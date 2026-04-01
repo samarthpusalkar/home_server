@@ -10,8 +10,10 @@ Optional public-facing pieces are disabled unless you turn them on in `/opt/home
 
 - empty `COMPOSE_PROFILES` = local-only stack
 - `COMPOSE_PROFILES=public-game` = enable Playit for games like Minecraft
-- `COMPOSE_PROFILES=public-http` = enable Traefik + Cloudflare Tunnel for web apps
-- `COMPOSE_PROFILES=public-game,public-http` = enable both
+- `COMPOSE_PROFILES=public-http` = enable Traefik for path-based local HTTP routing
+- `COMPOSE_PROFILES=managed-cloudflare` = enable the Docker `cloudflared` container for owned-domain tunnels
+- `COMPOSE_PROFILES=public-game,public-http` = games + Traefik router
+- `COMPOSE_PROFILES=public-game,public-http,managed-cloudflare` = full public stack with owned-domain Cloudflare tunnel
 
 ## Public HTTP Model
 
@@ -26,6 +28,10 @@ Cloudflare Tunnel should expose one local service:
 - `http://traefik:80`
 
 Traefik then routes each path to the right container.
+
+When you use a Quick Tunnel instead of an owned-domain Cloudflare tunnel, `cloudflared` runs on the Pi host as a `systemd` service and points at:
+
+- `http://127.0.0.1:80`
 
 ## What Auto-Updates
 
@@ -72,12 +78,15 @@ Set these base values:
 
 Set these only if you enable `public-http`:
 
-- `CLOUDFLARED_TOKEN`
 - `PUBLIC_APP_SCHEME`
 - `PUBLIC_APP_HOST`
 - `PUBLIC_BASE_URL`
 - `OPENWEBUI_PUBLIC_PATH`
 - `NEXTCLOUD_PUBLIC_PATH`
+
+Set these only if you enable `managed-cloudflare`:
+
+- `CLOUDFLARED_TOKEN`
 
 If you only want Minecraft/public game access for now, you can leave Cloudflare values alone and set:
 
@@ -95,6 +104,58 @@ In Cloudflare Zero Trust -> Tunnels -> your tunnel -> Public Hostname:
 - Service: `http://traefik:80`
 
 After this is added, every new HTTP service can be exposed by adding a path rule in Traefik.
+
+## Quick Tunnel With DuckDNS TXT
+
+If you do not own a domain, you can use a temporary Cloudflare Quick Tunnel instead:
+
+```bash
+bash scripts/quick_tunnel_duckdns.sh start http://localhost:8080
+```
+
+This script can also publish the live `trycloudflare.com` URL into a DuckDNS `TXT` record:
+
+```bash
+export DUCKDNS_DOMAIN=your-subdomain
+export DUCKDNS_TOKEN=your-token
+bash scripts/quick_tunnel_duckdns.sh start http://localhost:8080
+```
+
+Important:
+
+- DuckDNS does not officially redirect your subdomain to the Quick Tunnel URL
+- the script stores the live tunnel URL in `.quick-tunnel/current_url.txt`
+- if DuckDNS credentials are set, it writes that same URL into the DuckDNS `TXT` record
+- the Quick Tunnel URL changes when the tunnel is restarted
+
+Useful commands:
+
+```bash
+bash scripts/quick_tunnel_duckdns.sh status
+bash scripts/quick_tunnel_duckdns.sh stop
+bash scripts/quick_tunnel_duckdns.sh publish-txt
+```
+
+## Quick Tunnel Auto-Start
+
+If you want the Quick Tunnel to survive reboots and keep DuckDNS TXT updated automatically:
+
+```bash
+cd /opt/homelab
+bash scripts/setup_quick_tunnel_service.sh
+```
+
+This installs `cloudflared` on the Pi host and creates a `systemd` service that:
+
+- starts on boot
+- waits for the local target from `QUICK_TUNNEL_LOCAL_URL`
+- restarts the Quick Tunnel if it dies
+- republishes the active `trycloudflare.com` URL to DuckDNS TXT every `QUICK_TUNNEL_SYNC_INTERVAL_SECONDS`
+
+This host-level Quick Tunnel is separate from the Docker `cloudflared` container. Use one of these approaches:
+
+- Quick Tunnel without a domain: `COMPOSE_PROFILES=public-http`
+- Owned-domain Cloudflare tunnel: `COMPOSE_PROFILES=public-http,managed-cloudflare`
 
 ## One-Time GitHub Runner Setup (On Pi)
 
@@ -169,14 +230,14 @@ ports:
 
 If you do not own a domain yet:
 
-1. Use `COMPOSE_PROFILES=public-game`
-2. Set only `PLAYIT_SECRET_KEY`
-3. Ignore Cloudflare and Traefik for now
-4. Keep Nextcloud and other web apps local on your LAN
+1. Use `COMPOSE_PROFILES=public-game,public-http`
+2. Set `PLAYIT_SECRET_KEY`
+3. Use the Quick Tunnel service if you want temporary remote web access
+4. Keep in mind the public URL is still a random `trycloudflare.com` address
 
 If you later buy a domain:
 
-1. Change to `COMPOSE_PROFILES=public-game,public-http`
+1. Change to `COMPOSE_PROFILES=public-game,public-http,managed-cloudflare`
 2. Set `CLOUDFLARED_TOKEN`
 3. Point Cloudflare Tunnel at `http://traefik:80`
 4. Start exposing selected web apps by path
