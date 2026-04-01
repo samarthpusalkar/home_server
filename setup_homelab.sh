@@ -27,6 +27,8 @@ cp astro_session.sh "$HOMELAB_ROOT/"
 cp encryption_setup.sh "$HOMELAB_ROOT/"
 cp .env.example "$HOMELAB_ROOT/"
 cp -R scripts "$HOMELAB_ROOT/"
+cp -R config "$HOMELAB_ROOT/"
+cp -R services "$HOMELAB_ROOT/"
 cp README.md "$HOMELAB_ROOT/" 2>/dev/null || true
 if [ ! -f "$HOMELAB_ROOT/.env" ]; then
   cp "$HOMELAB_ROOT/.env.example" "$HOMELAB_ROOT/.env"

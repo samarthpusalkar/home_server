@@ -13,6 +13,20 @@ Optional public-facing pieces are disabled unless you turn them on in `/opt/home
 - `COMPOSE_PROFILES=public-http` = enable Traefik + Cloudflare Tunnel for web apps
 - `COMPOSE_PROFILES=public-game,public-http` = enable both
 
+## Public HTTP Model
+
+HTTP apps now use one public hostname with path-based routing:
+
+- `https://home.example.com/nextcloud`
+- `https://home.example.com/openwebui`
+- `https://home.example.com/custom_service1`
+
+Cloudflare Tunnel should expose one local service:
+
+- `http://traefik:80`
+
+Traefik then routes each path to the right container.
+
 ## What Auto-Updates
 
 On push to `main`, GitHub Actions (self-hosted runner on the Pi) will:
@@ -21,6 +35,12 @@ On push to `main`, GitHub Actions (self-hosted runner on the Pi) will:
 2. Pull available container images
 3. Rebuild local custom services in `services/*`
 4. Run `docker compose up -d --build --remove-orphans` for the profiles enabled in `.env`
+
+This means:
+
+- new services are created automatically on push
+- changed services are rebuilt and restarted automatically on push
+- unchanged services normally stay up
 
 ## What Does Not Auto-Update
 
@@ -53,8 +73,11 @@ Set these base values:
 Set these only if you enable `public-http`:
 
 - `CLOUDFLARED_TOKEN`
-- `OPENWEBUI_HOST`
-- `NEXTCLOUD_HOST`
+- `PUBLIC_APP_SCHEME`
+- `PUBLIC_APP_HOST`
+- `PUBLIC_BASE_URL`
+- `OPENWEBUI_PUBLIC_PATH`
+- `NEXTCLOUD_PUBLIC_PATH`
 
 If you only want Minecraft/public game access for now, you can leave Cloudflare values alone and set:
 
@@ -68,10 +91,10 @@ This section is optional. Skip it unless you own a domain and want public HTTP a
 
 In Cloudflare Zero Trust -> Tunnels -> your tunnel -> Public Hostname:
 
-- Hostname: `*.yourdomain.com`
+- Hostname: `home.yourdomain.com`
 - Service: `http://traefik:80`
 
-After this wildcard is added, every new HTTP service can be exposed just by adding Traefik labels and a host value in `.env`.
+After this is added, every new HTTP service can be exposed by adding a path rule in Traefik.
 
 ## One-Time GitHub Runner Setup (On Pi)
 
@@ -100,13 +123,23 @@ bash scripts/deploy.sh
 
 After this, deploys happen automatically on push to `main`.
 
+## Remote Restart
+
+If you need to restart the stack without SSH:
+
+1. Open GitHub Actions
+2. Run `Restart Homelab`
+3. Optionally enter a single compose service name such as `openwebui`
+
+Normal pushes should already restart changed services automatically, so this is mainly for manual recovery.
+
 ## Add A New Service (Any Type: EXIF, Image Gen, OCR, etc.)
 
 1. Create service folder:
    - `services/<service-name>/Dockerfile`
    - app code and dependency files
-2. Add service to `docker-compose.yml` with Traefik labels.
-3. Add `<SERVICE>_HOST` in `/opt/homelab/.env` (for example `IMGGEN_HOST=imggen.yourdomain.com`).
+2. Add service to `docker-compose.yml` with Traefik path labels.
+3. Add a public path in `/opt/homelab/.env` if you want it exposed through Cloudflare.
 4. Commit and push to `main`.
 
 ### Service Compose Example
@@ -118,8 +151,10 @@ imggen:
   restart: unless-stopped
   labels:
     - "traefik.enable=true"
-    - "traefik.http.routers.imggen.rule=Host(`${IMGGEN_HOST:-imggen.example.com}`)"
+    - "traefik.http.routers.imggen.rule=Host(`${PUBLIC_APP_HOST}`) && PathPrefix(`${IMGGEN_PUBLIC_PATH:-/imggen}`)"
     - "traefik.http.routers.imggen.entrypoints=web"
+    - "traefik.http.routers.imggen.middlewares=imggen-strip"
+    - "traefik.http.middlewares.imggen-strip.stripprefix.prefixes=${IMGGEN_PUBLIC_PATH:-/imggen}"
     - "traefik.http.services.imggen.loadbalancer.server.port=8000"
 ```
 
@@ -143,5 +178,5 @@ If you later buy a domain:
 
 1. Change to `COMPOSE_PROFILES=public-game,public-http`
 2. Set `CLOUDFLARED_TOKEN`
-3. Configure the wildcard hostname in Cloudflare
-4. Start exposing selected web apps by subdomain
+3. Point Cloudflare Tunnel at `http://traefik:80`
+4. Start exposing selected web apps by path

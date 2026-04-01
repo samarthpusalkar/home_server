@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/deploy-homelab.yml"
       - "docker-compose.yml"
+      - "config/**"
       - "scripts/**"
       - "services/**"
   workflow_dispatch:
@@ -33,4 +34,3 @@ jobs:
           BRANCH: main
           COMPOSE_FILES: docker-compose.yml
         run: bash ./scripts/deploy.sh
-

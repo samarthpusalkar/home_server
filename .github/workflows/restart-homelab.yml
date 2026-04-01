@@ -1,0 +1,29 @@
+name: Restart Homelab
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: "Optional docker compose service name to restart"
+        required: false
+        type: string
+
+jobs:
+  restart:
+    runs-on:
+      - self-hosted
+      - linux
+      - arm64
+      - homelab
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restart stack or service
+        env:
+          REPO_DIR: /opt/homelab
+          COMPOSE_FILES: docker-compose.yml
+          SERVICE_NAME: ${{ inputs.service_name }}
+        run: bash ./scripts/restart_stack.sh
+

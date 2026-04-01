@@ -43,6 +43,7 @@ services:
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      WEBUI_URL: ${PUBLIC_BASE_URL:-https://home.example.com}${OPENWEBUI_PUBLIC_PATH:-/openwebui}
     deploy:
       resources:
         limits:
@@ -50,8 +51,10 @@ services:
           memory: 1G
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.openwebui.rule=Host(`${OPENWEBUI_HOST:-openwebui.local}`)"
+      - "traefik.http.routers.openwebui.rule=Host(`${PUBLIC_APP_HOST:-home.example.com}`) && PathPrefix(`${OPENWEBUI_PUBLIC_PATH:-/openwebui}`)"
       - "traefik.http.routers.openwebui.entrypoints=web"
+      - "traefik.http.routers.openwebui.middlewares=openwebui-strip"
+      - "traefik.http.middlewares.openwebui-strip.stripprefix.prefixes=${OPENWEBUI_PUBLIC_PATH:-/openwebui}"
       - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
     volumes:
       - ${DATA_ROOT:-./data}/openwebui:/app/backend/data
@@ -84,6 +87,10 @@ services:
       NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
       NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
       NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS}
+      PUBLIC_APP_HOST: ${PUBLIC_APP_HOST:-home.example.com}
+      PUBLIC_APP_SCHEME: ${PUBLIC_APP_SCHEME:-https}
+      NEXTCLOUD_PUBLIC_PATH: ${NEXTCLOUD_PUBLIC_PATH:-/nextcloud}
+      NEXTCLOUD_TRUSTED_PROXIES: ${NEXTCLOUD_TRUSTED_PROXIES:-127.0.0.1 172.16.0.0/12}
     deploy:
       resources:
         limits:
@@ -91,11 +98,14 @@ services:
           memory: 1G
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOST:-nextcloud.local}`)"
+      - "traefik.http.routers.nextcloud.rule=Host(`${PUBLIC_APP_HOST:-home.example.com}`) && PathPrefix(`${NEXTCLOUD_PUBLIC_PATH:-/nextcloud}`)"
       - "traefik.http.routers.nextcloud.entrypoints=web"
+      - "traefik.http.routers.nextcloud.middlewares=nextcloud-strip"
+      - "traefik.http.middlewares.nextcloud-strip.stripprefix.prefixes=${NEXTCLOUD_PUBLIC_PATH:-/nextcloud}"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
     volumes:
       - ${DATA_ROOT:-./data}/nextcloud:/var/www/html
+      - ./config/nextcloud/reverse-proxy.config.php:/var/www/html/config/reverse-proxy.config.php:ro
     ports:
       - "8081:80"
     restart: unless-stopped
