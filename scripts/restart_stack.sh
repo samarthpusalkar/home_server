@@ -13,6 +13,21 @@ expand_path() {
   printf '%s\n' "$path"
 }
 
+resolve_compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+    return 0
+  fi
+
+  if command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker-compose)
+    return 0
+  fi
+
+  echo "Neither 'docker compose' nor 'docker-compose' is available."
+  exit 1
+}
+
 REPO_DIR="$(expand_path "$REPO_DIR")"
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -24,6 +39,9 @@ if [[ ! -f "$REPO_DIR/.env" ]]; then
   echo "Missing $REPO_DIR/.env"
   exit 1
 fi
+
+declare -a COMPOSE_CMD
+resolve_compose_cmd
 
 cd "$REPO_DIR"
 
@@ -55,8 +73,8 @@ fi
 
 if [[ -n "$SERVICE_NAME" ]]; then
   echo "[restart] Restarting service: $SERVICE_NAME"
-  docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env restart "$SERVICE_NAME"
+  "${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env restart "$SERVICE_NAME"
 else
   echo "[restart] Restarting enabled stack"
-  docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env restart
+  "${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env restart
 fi

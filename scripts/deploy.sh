@@ -13,6 +13,21 @@ expand_path() {
   printf '%s\n' "$path"
 }
 
+resolve_compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+    return 0
+  fi
+
+  if command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker-compose)
+    return 0
+  fi
+
+  echo "Neither 'docker compose' nor 'docker-compose' is available."
+  exit 1
+}
+
 REPO_DIR="$(expand_path "$REPO_DIR")"
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -25,6 +40,9 @@ if [[ ! -d "$REPO_DIR/.git" ]]; then
   echo "Run scripts/bootstrap_fresh_pi.sh first."
   exit 1
 fi
+
+declare -a COMPOSE_CMD
+resolve_compose_cmd
 
 cd "$REPO_DIR"
 
@@ -71,10 +89,10 @@ else
 fi
 
 echo "[deploy] Pulling available images"
-docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env pull --ignore-pull-failures
+"${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env pull --ignore-pull-failures
 
 echo "[deploy] Applying stack changes"
-docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env up -d --build --remove-orphans
+"${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env up -d --build --remove-orphans
 
 echo "[deploy] Current status"
-docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env ps
+"${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env ps
