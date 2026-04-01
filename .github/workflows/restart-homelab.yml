@@ -22,8 +22,6 @@ jobs:
 
       - name: Restart stack or service
         env:
-          REPO_DIR: /opt/homelab
           COMPOSE_FILES: docker-compose.yml
           SERVICE_NAME: ${{ inputs.service_name }}
         run: bash ./scripts/restart_stack.sh
-

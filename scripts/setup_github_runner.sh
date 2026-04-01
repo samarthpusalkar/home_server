@@ -6,7 +6,7 @@ GH_REPO="${GH_REPO:-home_server}"
 RUNNER_TOKEN="${RUNNER_TOKEN:-}"
 RUNNER_NAME="${RUNNER_NAME:-$(hostname)-homelab}"
 RUNNER_LABELS="${RUNNER_LABELS:-homelab,linux,arm64}"
-RUNNER_DIR="${RUNNER_DIR:-/opt/actions-runner}"
+RUNNER_DIR="${RUNNER_DIR:-${HOME}/actions-runner}"
 
 if [[ -z "$RUNNER_TOKEN" ]]; then
   echo "Set RUNNER_TOKEN first."
@@ -69,4 +69,3 @@ sudo ./svc.sh status || true
 
 echo "Runner setup complete."
 echo "Workflow label required: homelab"
-

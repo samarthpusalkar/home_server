@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HOMELAB_ROOT="${HOMELAB_ROOT:-/opt/homelab}"
+HOMELAB_ROOT="${HOMELAB_ROOT:-${HOME}/homelab}"
 SERVICE_NAME="${SERVICE_NAME:-homelab-quick-tunnel}"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 RUN_AS_USER="${RUN_AS_USER:-$USER}"
@@ -96,4 +96,3 @@ sudo systemctl status "$SERVICE_NAME" --no-pager || true
 echo "Quick Tunnel service installed."
 echo "The host-level cloudflared process now starts on boot."
 echo "Edit ${HOMELAB_ROOT}/.env to control QUICK_TUNNEL_* and DUCKDNS_* values."
-

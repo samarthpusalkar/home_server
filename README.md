@@ -2,11 +2,11 @@
 
 This repo is set up so you only do SSH/manual setup once on a fresh Raspberry Pi, then future deploys happen on every push to `main`.
 
-Your GitHub repo name (`home_server`) and local folder name (`homelab` or `/opt/homelab`) do not need to match.
+Your GitHub repo name (`home_server`) and local folder name (`homelab` or `~/homelab`) do not need to match.
 
 ## Profiles
 
-Optional public-facing pieces are disabled unless you turn them on in `/opt/homelab/.env`:
+Optional public-facing pieces are disabled unless you turn them on in `~/homelab/.env`:
 
 - empty `COMPOSE_PROFILES` = local-only stack
 - `COMPOSE_PROFILES=public-game` = enable Playit for games like Minecraft
@@ -37,7 +37,7 @@ When you use a Quick Tunnel instead of an owned-domain Cloudflare tunnel, `cloud
 
 On push to `main`, GitHub Actions (self-hosted runner on the Pi) will:
 
-1. Pull latest git changes into `/opt/homelab`
+1. Pull latest git changes into `~/homelab`
 2. Pull available container images
 3. Rebuild local custom services in `services/*`
 4. Run `docker compose up -d --build --remove-orphans` for the profiles enabled in `.env`
@@ -50,7 +50,7 @@ This means:
 
 ## What Does Not Auto-Update
 
-- `/opt/homelab/.env` values and secrets (you manage these manually)
+- `~/homelab/.env` values and secrets (you manage these manually)
 - Cloudflare Zero Trust dashboard settings (only if you use `public-http`)
 - DNS records outside your wildcard setup
 
@@ -59,15 +59,15 @@ This means:
 Run once on the Raspberry Pi:
 
 ```bash
-git clone https://github.com/samarthpusalkar/home_server.git /opt/homelab
-cd /opt/homelab
+git clone https://github.com/samarthpusalkar/home_server.git ~/homelab
+cd ~/homelab
 bash scripts/bootstrap_fresh_pi.sh
 ```
 
 Then edit:
 
 ```bash
-nano /opt/homelab/.env
+nano ~/homelab/.env
 ```
 
 Set these base values:
@@ -141,7 +141,7 @@ bash scripts/quick_tunnel_duckdns.sh publish-txt
 If you want the Quick Tunnel to survive reboots and keep DuckDNS TXT updated automatically:
 
 ```bash
-cd /opt/homelab
+cd ~/homelab
 bash scripts/setup_quick_tunnel_service.sh
 ```
 
@@ -166,7 +166,7 @@ Create a runner token in:
 Then run:
 
 ```bash
-cd /opt/homelab
+cd ~/homelab
 export RUNNER_TOKEN="paste_token_here"
 export GH_OWNER="samarthpusalkar"
 export GH_REPO="home_server"
@@ -178,7 +178,7 @@ Runner labels include `homelab`, so workflow `.github/workflows/deploy-homelab.y
 ## First Deploy
 
 ```bash
-cd /opt/homelab
+cd ~/homelab
 bash scripts/deploy.sh
 ```
 
@@ -200,7 +200,7 @@ Normal pushes should already restart changed services automatically, so this is 
    - `services/<service-name>/Dockerfile`
    - app code and dependency files
 2. Add service to `docker-compose.yml` with Traefik path labels.
-3. Add a public path in `/opt/homelab/.env` if you want it exposed through Cloudflare.
+3. Add a public path in `~/homelab/.env` if you want it exposed through Cloudflare.
 4. Commit and push to `main`.
 
 ### Service Compose Example

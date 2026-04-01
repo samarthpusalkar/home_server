@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="${REPO_DIR:-/opt/homelab}"
+REPO_DIR="${REPO_DIR:-${HOME}/homelab}"
 COMPOSE_FILES="${COMPOSE_FILES:-docker-compose.yml}"
 PROFILE_STRING="${COMPOSE_PROFILES:-}"
 SERVICE_NAME="${SERVICE_NAME:-}"
+
+expand_path() {
+  local path="$1"
+  path="${path/#\~/$HOME}"
+  path="${path//\$HOME/$HOME}"
+  printf '%s\n' "$path"
+}
+
+REPO_DIR="$(expand_path "$REPO_DIR")"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is not installed or not in PATH."
@@ -51,4 +60,3 @@ else
   echo "[restart] Restarting enabled stack"
   docker compose "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env restart
 fi
-

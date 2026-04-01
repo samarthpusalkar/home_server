@@ -2,8 +2,12 @@
 set -e
 
 echo "=== Gocryptfs Encryption Setup ==="
-echo "We will mount /opt/homelab/data/nextcloud onto an encrypted directory."
-echo "The encrypted files will physically rest in /opt/homelab/encrypted."
+HOMELAB_ROOT="${HOMELAB_ROOT:-$HOME/homelab}"
+NEXTCLOUD_DATA_DIR="$HOMELAB_ROOT/data/nextcloud"
+ENCRYPTED_DIR="$HOMELAB_ROOT/encrypted"
+
+echo "We will mount $NEXTCLOUD_DATA_DIR onto an encrypted directory."
+echo "The encrypted files will physically rest in $ENCRYPTED_DIR."
 echo "Note: Execute this script on your Raspberry Pi, not your host Mac."
 
 if ! command -v gocryptfs &> /dev/null; then
@@ -11,17 +15,17 @@ if ! command -v gocryptfs &> /dev/null; then
   exit 1
 fi
 
-if mount | grep -q "/opt/homelab/data/nextcloud"; then
+if mount | grep -q "$NEXTCLOUD_DATA_DIR"; then
     echo "Directory is already mounted."
     exit 0
 fi
 
-if [ ! -f /opt/homelab/encrypted/gocryptfs.conf ]; then
-    echo "Initializing new encrypted vault in /opt/homelab/encrypted..."
-    gocryptfs -init /opt/homelab/encrypted
+if [ ! -f "$ENCRYPTED_DIR/gocryptfs.conf" ]; then
+    echo "Initializing new encrypted vault in $ENCRYPTED_DIR..."
+    gocryptfs -init "$ENCRYPTED_DIR"
 fi
 
 echo "Mounting the encrypted vault..."
-gocryptfs /opt/homelab/encrypted /opt/homelab/data/nextcloud
+gocryptfs "$ENCRYPTED_DIR" "$NEXTCLOUD_DATA_DIR"
 
-echo "Mounted successfully. Data written to /opt/homelab/data/nextcloud is now transparently encrypted."
+echo "Mounted successfully. Data written to $NEXTCLOUD_DATA_DIR is now transparently encrypted."

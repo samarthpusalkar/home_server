@@ -26,6 +26,13 @@ DUCKDNS_TOKEN=""
 PUBLISH_DUCKDNS_TXT=""
 CLEAR_DUCKDNS_TXT_ON_STOP=""
 
+expand_path() {
+  local path="$1"
+  path="${path/#\~/$HOME}"
+  path="${path//\$HOME/$HOME}"
+  printf '%s\n' "$path"
+}
+
 read_env_value() {
   local key="$1"
   local default_value="${2:-}"
@@ -55,6 +62,7 @@ read_env_value() {
 
 refresh_config() {
   STATE_DIR="$(read_env_value QUICK_TUNNEL_STATE_DIR "$HOMELAB_ROOT/.quick-tunnel")"
+  STATE_DIR="$(expand_path "$STATE_DIR")"
   PID_FILE="$STATE_DIR/cloudflared.pid"
   LOG_FILE="$STATE_DIR/cloudflared.log"
   URL_FILE="$STATE_DIR/current_url.txt"
@@ -87,7 +95,7 @@ Usage:
 
 Environment or .env values:
   QUICK_TUNNEL_LOCAL_URL=http://127.0.0.1:80
-  QUICK_TUNNEL_STATE_DIR=/opt/homelab/.quick-tunnel
+  QUICK_TUNNEL_STATE_DIR=~/homelab/.quick-tunnel
   QUICK_TUNNEL_TARGET_WAIT_SECONDS=300
   QUICK_TUNNEL_CHECK_INTERVAL_SECONDS=10
   QUICK_TUNNEL_SYNC_INTERVAL_SECONDS=600
@@ -499,4 +507,3 @@ case "$COMMAND" in
     exit 1
     ;;
 esac
-

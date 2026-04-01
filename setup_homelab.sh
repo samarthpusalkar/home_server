@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-HOMELAB_ROOT=/opt/homelab
+HOMELAB_ROOT="${HOMELAB_ROOT:-$HOME/homelab}"
 
 echo "=== RPi Homelab Setup for StellarMate ==="
 echo "Installing Docker, Docker Compose, and gocryptfs..."
@@ -36,8 +36,8 @@ fi
 
 # Priority order:
 # 1) exported DATA_ROOT in current shell
-# 2) DATA_ROOT inside /opt/homelab/.env
-# 3) default ./data (relative to /opt/homelab)
+# 2) DATA_ROOT inside $HOMELAB_ROOT/.env
+# 3) default ./data (relative to $HOMELAB_ROOT)
 DATA_ROOT_FROM_ENVFILE=$(grep -E '^DATA_ROOT=' "$HOMELAB_ROOT/.env" | tail -n 1 || true)
 DATA_ROOT_FROM_ENVFILE="${DATA_ROOT_FROM_ENVFILE#DATA_ROOT=}"
 DATA_ROOT_FROM_ENVFILE="${DATA_ROOT_FROM_ENVFILE%\"}"
@@ -68,8 +68,8 @@ chmod +x "$HOMELAB_ROOT"/scripts/*.sh 2>/dev/null || true
 
 echo "Done!"
 echo "Next steps:"
-echo "1) Fill in /opt/homelab/.env and choose COMPOSE_PROFILES"
-echo "2) Run /opt/homelab/scripts/deploy.sh"
-echo "3) If using Quick Tunnel, run /opt/homelab/scripts/setup_quick_tunnel_service.sh"
+echo "1) Fill in $HOMELAB_ROOT/.env and choose COMPOSE_PROFILES"
+echo "2) Run $HOMELAB_ROOT/scripts/deploy.sh"
+echo "3) If using Quick Tunnel, run $HOMELAB_ROOT/scripts/setup_quick_tunnel_service.sh"
 echo "4) If using owned-domain Cloudflare Tunnel, point it at http://traefik:80"
-echo "5) Configure GitHub runner with /opt/homelab/scripts/setup_github_runner.sh"
+echo "5) Configure GitHub runner with $HOMELAB_ROOT/scripts/setup_github_runner.sh"

@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/samarthpusalkar/home_server.git}"
 BRANCH="${BRANCH:-main}"
-HOMELAB_ROOT="${HOMELAB_ROOT:-/opt/homelab}"
+HOMELAB_ROOT="${HOMELAB_ROOT:-${HOME}/homelab}"
 
 echo "=== Fresh Raspberry Pi bootstrap ==="
 echo "Repo: $REPO_URL"

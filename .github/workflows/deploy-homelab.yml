@@ -30,7 +30,6 @@ jobs:
 
       - name: Deploy to Raspberry Pi
         env:
-          REPO_DIR: /opt/homelab
           BRANCH: main
           COMPOSE_FILES: docker-compose.yml
         run: bash ./scripts/deploy.sh
