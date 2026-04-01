@@ -53,7 +53,7 @@ services:
           memory: 1G
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.openwebui.rule=Host(`${PUBLIC_APP_HOST:-home.example.com}`) && PathPrefix(`${OPENWEBUI_PUBLIC_PATH:-/openwebui}`)"
+      - "traefik.http.routers.openwebui.rule=PathPrefix(`${OPENWEBUI_PUBLIC_PATH:-/openwebui}`)"
       - "traefik.http.routers.openwebui.entrypoints=web"
       - "traefik.http.routers.openwebui.middlewares=openwebui-strip"
       - "traefik.http.middlewares.openwebui-strip.stripprefix.prefixes=${OPENWEBUI_PUBLIC_PATH:-/openwebui}"
@@ -100,7 +100,7 @@ services:
           memory: 1G
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`${PUBLIC_APP_HOST:-home.example.com}`) && PathPrefix(`${NEXTCLOUD_PUBLIC_PATH:-/nextcloud}`)"
+      - "traefik.http.routers.nextcloud.rule=PathPrefix(`${NEXTCLOUD_PUBLIC_PATH:-/nextcloud}`)"
       - "traefik.http.routers.nextcloud.entrypoints=web"
       - "traefik.http.routers.nextcloud.middlewares=nextcloud-strip"
       - "traefik.http.middlewares.nextcloud-strip.stripprefix.prefixes=${NEXTCLOUD_PUBLIC_PATH:-/nextcloud}"

@@ -18,7 +18,7 @@ Optional public-facing pieces are disabled unless you turn them on in `~/homelab
 
 ## Public HTTP Model
 
-HTTP apps now use one public hostname with path-based routing:
+HTTP apps now use one public entrypoint with path-based routing:
 
 - `https://home.example.com/nextcloud`
 - `https://home.example.com/openwebui`
@@ -29,6 +29,7 @@ Cloudflare Tunnel should expose one local service:
 - `http://traefik:80`
 
 Traefik then routes each path to the right container.
+The router now matches on path prefixes, so it works both with an owned domain and with a random Quick Tunnel hostname.
 
 When you use a Quick Tunnel instead of an owned-domain Cloudflare tunnel, `cloudflared` runs on the Pi host as a `systemd` service and points at:
 
@@ -155,6 +156,8 @@ Important:
 - the script stores the live tunnel URL in `.quick-tunnel/current_url.txt`
 - if DuckDNS credentials are set, it writes that same URL into the DuckDNS `TXT` record
 - the Quick Tunnel URL changes when the tunnel is restarted
+- simple path-based apps like Open WebUI can work through the random Quick Tunnel hostname
+- apps that require a stable hostname, like Nextcloud, are a poor fit for Quick Tunnel mode
 
 Useful commands:
 
@@ -242,7 +245,7 @@ imggen:
   restart: unless-stopped
   labels:
     - "traefik.enable=true"
-    - "traefik.http.routers.imggen.rule=Host(`${PUBLIC_APP_HOST}`) && PathPrefix(`${IMGGEN_PUBLIC_PATH:-/imggen}`)"
+    - "traefik.http.routers.imggen.rule=PathPrefix(`${IMGGEN_PUBLIC_PATH:-/imggen}`)"
     - "traefik.http.routers.imggen.entrypoints=web"
     - "traefik.http.routers.imggen.middlewares=imggen-strip"
     - "traefik.http.middlewares.imggen-strip.stripprefix.prefixes=${IMGGEN_PUBLIC_PATH:-/imggen}"
