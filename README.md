@@ -139,7 +139,7 @@ After this is added, every new HTTP service can be exposed by adding a path rule
 If you do not own a domain, you can use a temporary Cloudflare Quick Tunnel instead:
 
 ```bash
-bash scripts/quick_tunnel_duckdns.sh start http://localhost:8080
+bash scripts/quick_tunnel_duckdns.sh start
 ```
 
 This script can also publish the live `trycloudflare.com` URL into a DuckDNS `TXT` record:
@@ -147,8 +147,13 @@ This script can also publish the live `trycloudflare.com` URL into a DuckDNS `TX
 ```bash
 export DUCKDNS_DOMAIN=your-subdomain
 export DUCKDNS_TOKEN=your-token
-bash scripts/quick_tunnel_duckdns.sh start http://localhost:8080
+bash scripts/quick_tunnel_duckdns.sh start
 ```
+
+By default, the script targets `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`, which should be Traefik's local HTTP entrypoint for this stack.
+After the tunnel starts, open Open WebUI at:
+
+- `https://<random-subdomain>.trycloudflare.com${OPENWEBUI_PUBLIC_PATH:-/openwebui}`
 
 Important:
 
@@ -158,6 +163,7 @@ Important:
 - the Quick Tunnel URL changes when the tunnel is restarted
 - simple path-based apps like Open WebUI can work through the random Quick Tunnel hostname
 - apps that require a stable hostname, like Nextcloud, are a poor fit for Quick Tunnel mode
+- if Open WebUI was previously configured with a different external URL, update its `WebUI URL` setting to the current public hostname and path
 
 Useful commands:
 
