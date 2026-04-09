@@ -191,6 +191,3 @@ services:
     volumes:
       - ${DATA_ROOT:-./data}/playit:/data
     restart: unless-stopped
-
-volumes:
-  ${DATA_ROOT:-./data}/nextcloud:
