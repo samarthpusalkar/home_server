@@ -57,6 +57,37 @@ resolve_compose_cmd() {
   exit 1
 }
 
+read_env_value() {
+  local key="$1"
+  local value=""
+
+  if [[ -f .env ]]; then
+    value="$(grep -E "^${key}=" .env | tail -n 1 || true)"
+    value="${value#${key}=}"
+    value="${value%\"}"
+    value="${value#\"}"
+    value="${value%\'}"
+    value="${value#\'}"
+  fi
+
+  printf '%s\n' "$value"
+}
+
+resolve_python_cmd() {
+  if command -v python >/dev/null 2>&1; then
+    PYTHON_CMD=(python)
+    return 0
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD=(python3)
+    return 0
+  fi
+
+  echo "Neither 'python' nor 'python3' is available."
+  exit 1
+}
+
 REPO_DIR="$(expand_path "$REPO_DIR")"
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -72,8 +103,10 @@ fi
 
 declare -a DOCKER_PREFIX=()
 declare -a COMPOSE_CMD=()
+declare -a PYTHON_CMD=()
 resolve_docker_prefix
 resolve_compose_cmd
+resolve_python_cmd
 
 cd "$REPO_DIR"
 
@@ -124,6 +157,20 @@ echo "[deploy] Pulling available images"
 
 echo "[deploy] Applying stack changes"
 "${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env up -d --build --remove-orphans
+
+DATA_ROOT_VALUE="${DATA_ROOT:-}"
+if [[ -z "$DATA_ROOT_VALUE" ]]; then
+  DATA_ROOT_VALUE="$(read_env_value DATA_ROOT)"
+fi
+DATA_ROOT_VALUE="${DATA_ROOT_VALUE:-./data}"
+STATE_DIR="$(expand_path "$DATA_ROOT_VALUE")/admin-control"
+
+echo "[deploy] Reconciling admin-controlled auto-start state"
+if [[ "${#DOCKER_PREFIX[@]}" -gt 0 ]]; then
+  "${PYTHON_CMD[@]}" scripts/reconcile_managed_services.py --state-dir "$STATE_DIR" --docker-prefix "${DOCKER_PREFIX[0]}"
+else
+  "${PYTHON_CMD[@]}" scripts/reconcile_managed_services.py --state-dir "$STATE_DIR"
+fi
 
 echo "[deploy] Current status"
 "${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "${PROFILE_ARGS[@]}" --env-file .env ps

@@ -1,3 +1,5 @@
 .env
 .env.example
 .quick-tunnel/
+__pycache__/
+*.pyc

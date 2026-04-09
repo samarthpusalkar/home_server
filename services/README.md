@@ -12,8 +12,13 @@ Put each custom service in its own directory:
 2. Add a service entry in `docker-compose.yml`.
 3. Add Traefik labels with a hostname variable:
    - `traefik.http.routers.<service>.rule=Host(\`${<SERVICE>_PUBLIC_HOST}\`)`
-4. Add `<SERVICE>_PUBLIC_HOST` to `.env` on the Pi if you want it public. Use `example.com` placeholders in `.env.example` so the repo stays domain-agnostic.
-5. Commit and push to `main`.
+4. Add admin-discovery labels if you want the admin panel to control it automatically:
+   - `homelab.admin.managed=true`
+   - `homelab.admin.name=My Service`
+   - `homelab.admin.exposure=traefik`
+   - `homelab.admin.description=Short human-readable summary`
+5. Add `<SERVICE>_PUBLIC_HOST` to `.env` on the Pi if you want it public. Use `example.com` placeholders in `.env.example` so the repo stays domain-agnostic.
+6. Commit and push to `main`.
 
 The deploy workflow will pull the repo on the Pi and run:
 
@@ -32,4 +37,8 @@ myservice:
     - "traefik.http.routers.myservice.rule=Host(`${MYSERVICE_PUBLIC_HOST:-myservice.example.com}`)"
     - "traefik.http.routers.myservice.entrypoints=web"
     - "traefik.http.services.myservice.loadbalancer.server.port=8000"
+    - "homelab.admin.managed=true"
+    - "homelab.admin.name=My Service"
+    - "homelab.admin.exposure=traefik"
+    - "homelab.admin.description=Describe the service briefly"
 ```

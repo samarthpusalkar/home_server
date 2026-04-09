@@ -17,6 +17,11 @@ services:
           memory: 512M
     volumes:
       - ${DATA_ROOT:-./data}/minecraft:/data
+    labels:
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Minecraft"
+      - "homelab.admin.exposure=playit"
+      - "homelab.admin.description=Java Minecraft server published through Playit"
     ports:
       - "25565:25565"
     restart: unless-stopped
@@ -31,6 +36,11 @@ services:
         limits:
           cpus: "1.5"
           memory: 2G
+    labels:
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Ollama"
+      - "homelab.admin.exposure=local-only"
+      - "homelab.admin.description=Local model runtime used by Open WebUI"
     volumes:
       - ${DATA_ROOT:-./data}/ollama:/root/.ollama
     ports:
@@ -57,10 +67,48 @@ services:
       - "traefik.http.routers.openwebui.rule=Host(`${OPENWEBUI_PUBLIC_HOST}`)"
       - "traefik.http.routers.openwebui.entrypoints=web"
       - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Open WebUI"
+      - "homelab.admin.exposure=traefik"
+      - "homelab.admin.description=Chat interface exposed through Traefik"
     volumes:
       - ${DATA_ROOT:-./data}/openwebui:/app/backend/data
     ports:
       - "127.0.0.1:3001:8080"
+    restart: unless-stopped
+
+  admin-control:
+    build:
+      context: .
+      dockerfile: services/admin-control/Dockerfile
+    container_name: admin-control
+    environment:
+      ADMIN_STATE_DIR: /data/admin-control
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET}
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN:-}
+      ADMIN_SECURE_COOKIES: ${ADMIN_SECURE_COOKIES:-1}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-control.rule=Host(`${ADMIN_PUBLIC_HOST}`)"
+      - "traefik.http.routers.admin-control.entrypoints=web"
+      - "traefik.http.services.admin-control.loadbalancer.server.port=8000"
+      - "homelab.admin.managed=true"
+      - "homelab.admin.protected=true"
+      - "homelab.admin.name=Admin Control"
+      - "homelab.admin.exposure=traefik"
+      - "homelab.admin.description=Protected dashboard for controlling and registering services"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_ROOT:-./data}/admin-control:/data/admin-control
+    ports:
+      - "127.0.0.1:8091:8000"
     restart: unless-stopped
 
   traefik:
@@ -77,6 +125,12 @@ services:
     ports:
       - "127.0.0.1:${TRAEFIK_HOST_PORT:-8089}:80"
       - "127.0.0.1:${TRAEFIK_DASHBOARD_PORT:-8088}:8080"
+    labels:
+      - "homelab.admin.managed=true"
+      - "homelab.admin.protected=true"
+      - "homelab.admin.name=Traefik"
+      - "homelab.admin.exposure=local-router"
+      - "homelab.admin.description=HTTP router for public subdomains"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
@@ -103,26 +157,15 @@ services:
       - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_PUBLIC_HOST}`)"
       - "traefik.http.routers.nextcloud.entrypoints=web"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Nextcloud"
+      - "homelab.admin.exposure=traefik"
+      - "homelab.admin.description=File sync and collaboration app exposed through Traefik"
     volumes:
       - ${DATA_ROOT:-./data}/nextcloud:/var/www/html
       - ./config/nextcloud/reverse-proxy.config.php:/var/www/html/config/reverse-proxy.config.php:ro
     ports:
       - "127.0.0.1:8081:80"
-    restart: unless-stopped
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    profiles:
-      - managed-cloudflare
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARED_TOKEN}
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
     restart: unless-stopped
 
   playit:
@@ -138,6 +181,11 @@ services:
         limits:
           cpus: "0.5"
           memory: 128M
+    labels:
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Playit"
+      - "homelab.admin.exposure=playit"
+      - "homelab.admin.description=Public tunnel agent for Minecraft and other games"
     volumes:
       - ${DATA_ROOT:-./data}/playit:/data
     restart: unless-stopped

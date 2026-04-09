@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Homelab Admin Control</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Remote Service Controls</p>
+          <h1>Homelab Admin Panel</h1>
+          <p class="muted">
+            Start, stop, and persist auto-start choices for public services now,
+            while staying ready for future GitHub or webhook-driven service registration.
+          </p>
+        </div>
+        <form method="post" action="/logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <button type="submit" class="ghost">Log Out</button>
+        </form>
+      </section>
+
+      <section class="banner">
+        <div>
+          <strong>Signed in as {{ admin_username }}</strong>
+          <span class="muted">Protected services stay visible but cannot be remotely disabled from this panel.</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip">Session auth enabled</span>
+          {% if api_token_enabled %}
+          <span class="chip">Automation API token enabled</span>
+          {% else %}
+          <span class="chip muted-chip">Automation API token not set</span>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="service-grid">
+        {% for service in services %}
+        <article class="service-card {% if service.running %}running{% else %}stopped{% endif %}">
+          <div class="service-header">
+            <div>
+              <h2>{{ service.display_name }}</h2>
+              <p class="muted">{{ service.description or "No description registered yet." }}</p>
+            </div>
+            <div class="status-pill {% if service.running %}status-on{% else %}status-off{% endif %}">
+              {{ service.status }}
+            </div>
+          </div>
+
+          <dl class="meta">
+            <div>
+              <dt>Auto-start</dt>
+              <dd>{{ "enabled" if service.auto_start else "disabled" }}</dd>
+            </div>
+            <div>
+              <dt>Exposure</dt>
+              <dd>{{ service.exposure }}</dd>
+            </div>
+            <div>
+              <dt>Container</dt>
+              <dd>{{ service.container_name }}</dd>
+            </div>
+            <div>
+              <dt>Public hosts</dt>
+              <dd>
+                {% if service.public_hosts %}
+                {{ service.public_hosts | join(", ") }}
+                {% else %}
+                none registered
+                {% endif %}
+              </dd>
+            </div>
+          </dl>
+
+          {% if service.last_action %}
+          <p class="history muted">
+            Last action: {{ service.last_action }} by {{ service.last_actor or "unknown" }}
+            {% if service.last_action_at %}at {{ service.last_action_at }}{% endif %}
+          </p>
+          {% endif %}
+
+          {% if service.protected %}
+          <p class="alert soft">
+            This service is protected from remote stop and disable actions so you do not lock yourself out of the panel or router.
+          </p>
+          {% elif service.missing_container %}
+          <p class="alert soft">
+            The container is not present right now. Future automation can register it first, then this panel can control it.
+          </p>
+          {% endif %}
+
+          <div class="action-row">
+            <form method="post" action="/services/{{ service.key }}/action/start">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" {% if service.missing_container %}disabled{% endif %}>
+                Start
+              </button>
+            </form>
+            <form method="post" action="/services/{{ service.key }}/action/stop">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" class="ghost" {% if service.protected or service.missing_container %}disabled{% endif %}>
+                Stop
+              </button>
+            </form>
+            <form method="post" action="/services/{{ service.key }}/action/enable">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" class="secondary" {% if service.missing_container %}disabled{% endif %}>
+                Enable Auto-Start
+              </button>
+            </form>
+            <form method="post" action="/services/{{ service.key }}/action/disable">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" class="danger" {% if service.protected or service.missing_container %}disabled{% endif %}>
+                Disable Auto-Start
+              </button>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </section>
+
+      <section class="register-panel">
+        <div>
+          <p class="eyebrow">Future Service Provisioning</p>
+          <h2>Register A New Managed Service</h2>
+          <p class="muted">
+            This does not create the container for you yet. It stores metadata so the panel and future GitHub Actions or webhooks can discover, display, and control the service consistently.
+          </p>
+        </div>
+        <form method="post" action="/services/register" class="register-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label>
+            <span>Service key</span>
+            <input type="text" name="key" placeholder="cardmanagementsystem" required />
+          </label>
+          <label>
+            <span>Display name</span>
+            <input type="text" name="display_name" placeholder="Card Management System" required />
+          </label>
+          <label>
+            <span>Container name</span>
+            <input type="text" name="container_name" placeholder="cardmanagementsystem" required />
+          </label>
+          <label>
+            <span>Exposure</span>
+            <input type="text" name="exposure" placeholder="traefik" />
+          </label>
+          <label class="wide">
+            <span>Public hosts</span>
+            <input type="text" name="public_hosts" placeholder="cards.pusalkarhome.top, cards.internal" />
+          </label>
+          <label class="wide">
+            <span>Description</span>
+            <textarea name="description" rows="3" placeholder="Short note about what this service does"></textarea>
+          </label>
+          <button type="submit">Register Managed Service</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

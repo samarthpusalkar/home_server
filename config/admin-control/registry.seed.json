@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "services": [
+    {
+      "key": "admin-control",
+      "display_name": "Admin Control",
+      "container_name": "admin-control",
+      "description": "Protected control panel for homelab services",
+      "exposure": "traefik",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": true
+    },
+    {
+      "key": "traefik",
+      "display_name": "Traefik",
+      "container_name": "traefik",
+      "description": "HTTP router for public app hostnames",
+      "exposure": "local-router",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": true
+    },
+    {
+      "key": "openwebui",
+      "display_name": "Open WebUI",
+      "container_name": "openwebui",
+      "description": "Chat UI exposed through Traefik",
+      "exposure": "traefik",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": false
+    },
+    {
+      "key": "nextcloud",
+      "display_name": "Nextcloud",
+      "container_name": "nextcloud",
+      "description": "File sync and collaboration app exposed through Traefik",
+      "exposure": "traefik",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": false
+    },
+    {
+      "key": "minecraft",
+      "display_name": "Minecraft",
+      "container_name": "minecraft",
+      "description": "Java Minecraft server published through Playit",
+      "exposure": "playit",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": false
+    },
+    {
+      "key": "playit",
+      "display_name": "Playit",
+      "container_name": "playit",
+      "description": "Game tunnel agent for native Minecraft access",
+      "exposure": "playit",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": false
+    },
+    {
+      "key": "ollama",
+      "display_name": "Ollama",
+      "container_name": "ollama",
+      "description": "Local model runtime used by Open WebUI",
+      "exposure": "local-only",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": false
+    }
+  ]
+}
