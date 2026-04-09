@@ -469,6 +469,12 @@ python scripts/hash_admin_password.py
 
 Then copy that value into `ADMIN_PASSWORD_HASH` in `~/homelab/.env`.
 
+Because the generated hash contains `$`, wrap it in single quotes inside `.env`, for example:
+
+```bash
+ADMIN_PASSWORD_HASH='pbkdf2_sha256$600000$...$...'
+```
+
 Secure cookies are enabled by default for the public admin hostname. If you specifically want to log into `http://127.0.0.1:8091` over plain HTTP from a browser on the Pi, set:
 
 ```bash

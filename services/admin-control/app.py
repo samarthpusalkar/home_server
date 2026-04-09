@@ -457,7 +457,9 @@ async def logout(request: Request):
 
 @app.get("/")
 def dashboard(request: Request):
-    user = require_session_user(request)
+    user = get_session_user(request)
+    if user != ADMIN_USERNAME:
+        return RedirectResponse(url="/login", status_code=303)
     services = build_services()
     return templates.TemplateResponse(
         request,
