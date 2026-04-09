@@ -336,6 +336,7 @@ Nextcloud:
 - missing public host in `NEXTCLOUD_TRUSTED_DOMAINS` causes trusted domain errors
 - mismatched `NEXTCLOUD_PUBLIC_HOST` / `NEXTCLOUD_PUBLIC_URL` can break redirects
 - proxy issues usually point to `NEXTCLOUD_TRUSTED_PROXIES` or tunnel/proxy headers
+- if you see `Configuration was not read or initialized correctly`, run `bash scripts/repair_nextcloud.sh` to repair ownership and detect a broken `config.php`
 
 Minecraft:
 
