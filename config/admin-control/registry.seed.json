@@ -33,10 +33,10 @@
     },
     {
       "key": "nextcloud",
-      "display_name": "Nextcloud",
-      "container_name": "nextcloud",
-      "description": "File sync and collaboration app exposed through Traefik",
-      "exposure": "traefik",
+      "display_name": "Nextcloud AIO",
+      "container_name": "nextcloud-aio-mastercontainer",
+      "description": "Nextcloud All-in-One master container with bundled PostgreSQL",
+      "exposure": "direct",
       "public_hosts": [],
       "default_auto_start": true,
       "protected": false
