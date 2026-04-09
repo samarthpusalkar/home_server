@@ -88,6 +88,32 @@ resolve_python_cmd() {
   exit 1
 }
 
+ensure_clean_git_worktree() {
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "[deploy] Repository has uncommitted changes."
+    echo "[deploy] Commit or stash them before running deploy."
+    exit 1
+  fi
+}
+
+sync_branch_with_origin() {
+  local remote_ref="origin/$BRANCH"
+  local backup_branch=""
+
+  if git merge-base --is-ancestor HEAD "$remote_ref"; then
+    git pull --ff-only origin "$BRANCH"
+    return 0
+  fi
+
+  ensure_clean_git_worktree
+
+  backup_branch="backup/${BRANCH}-before-force-sync-$(date +%Y%m%d%H%M%S)"
+  echo "[deploy] Local branch cannot fast-forward to $remote_ref."
+  echo "[deploy] Creating backup branch $backup_branch before aligning with origin."
+  git branch "$backup_branch" HEAD
+  git reset --hard "$remote_ref"
+}
+
 REPO_DIR="$(expand_path "$REPO_DIR")"
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -118,7 +144,7 @@ if [[ "$CURRENT_BRANCH" != "$BRANCH" ]]; then
   git checkout "$BRANCH"
 fi
 
-git pull --ff-only origin "$BRANCH"
+sync_branch_with_origin
 
 declare -a COMPOSE_ARGS=()
 declare -a PROFILE_ARGS=()
