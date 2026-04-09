@@ -69,15 +69,15 @@ if [[ ! -f "$REPO_DIR/.env" ]]; then
   exit 1
 fi
 
-declare -a DOCKER_PREFIX
-declare -a COMPOSE_CMD
+declare -a DOCKER_PREFIX=()
+declare -a COMPOSE_CMD=()
 resolve_docker_prefix
 resolve_compose_cmd
 
 cd "$REPO_DIR"
 
-declare -a COMPOSE_ARGS
-declare -a PROFILE_ARGS
+declare -a COMPOSE_ARGS=()
+declare -a PROFILE_ARGS=()
 IFS=':' read -r -a COMPOSE_FILE_ARRAY <<< "$COMPOSE_FILES"
 for compose_file in "${COMPOSE_FILE_ARRAY[@]}"; do
   COMPOSE_ARGS+=(-f "$compose_file")
