@@ -1,0 +1,12 @@
+.git
+.github
+.quick-tunnel
+data
+data/**
+.env
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
