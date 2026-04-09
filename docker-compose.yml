@@ -141,6 +141,10 @@ services:
     image: ghcr.io/nextcloud-releases/all-in-one:latest
     init: true
     container_name: nextcloud-aio-mastercontainer
+    environment:
+      APACHE_PORT: ${NEXTCLOUD_AIO_APACHE_PORT:-11000}
+      APACHE_IP_BINDING: 127.0.0.1
+      SKIP_DOMAIN_VALIDATION: "true"
     deploy:
       resources:
         limits:
@@ -155,9 +159,7 @@ services:
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "80:80"
       - "8081:8080"
-      - "8443:8443"
     restart: unless-stopped
 
   playit:

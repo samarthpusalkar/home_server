@@ -37,7 +37,7 @@ You do not need one separate tunnel per subdomain.
 Recommended ingress strategy for this repo:
 
 - web apps such as Open WebUI: Cloudflare Tunnel + Traefik + one subdomain per app
-- Nextcloud AIO: use its own built-in stack instead of Traefik labels or custom reverse-proxy config
+- Nextcloud AIO: use the official reverse-proxy mode on `127.0.0.1:11000`, without custom read-only config mounts
 - game traffic such as Minecraft: Playit on the native game port
 - local-only backends such as Ollama: keep private unless you intentionally expose the HTTP API
 
@@ -77,7 +77,6 @@ Recommended starting point for your homelab:
 - keep Ollama private at first
 - keep Traefik dashboard private at first
 - use Playit for Minecraft
-- keep port `80` free on the Pi if you want to use AIO without a reverse proxy
 
 ## Cloudflare Setup Map
 
@@ -86,7 +85,7 @@ Use one host-managed Cloudflare Tunnel, not one tunnel per subdomain.
 Inside Cloudflare Zero Trust -> Tunnels -> your tunnel -> Public Hostname, create:
 
 - `chat.yourdomain.com` -> `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
-- `drive.yourdomain.com` -> Nextcloud AIO directly; do not route it through the repo Traefik setup
+- `drive.yourdomain.com` -> `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}`
 - `admin.yourdomain.com` -> `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
 - `api.yourdomain.com` -> `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
 
@@ -99,7 +98,7 @@ Do not create Cloudflare HTTP tunnel hostnames for:
 For your current intended setup, the Cloudflare public hostnames to add are:
 
 - `chat.example.com` -> `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
-- `drive.example.com` -> Nextcloud AIO directly
+- `drive.example.com` -> `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}`
 - `admin.example.com` -> `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
 
 If you want to keep it minimal for first boot, create only:
@@ -162,8 +161,6 @@ Set these only if you enable `public-http`:
 - `OPENWEBUI_PUBLIC_HOST`
 - `OPENWEBUI_PUBLIC_URL`
 - `OPENWEBUI_CORS_ALLOW_ORIGIN`
-- `NEXTCLOUD_PUBLIC_HOST`
-- `NEXTCLOUD_PUBLIC_URL`
 
 The committed `.env.example` uses `example.com` placeholders only. Put your real domain only in your local `.env`.
 
@@ -218,7 +215,7 @@ After this is added, every new HTTP service can be exposed by adding a hostname 
 Example mapping if your domain is `example.com`:
 
 - `chat.example.com` -> `http://traefik:80` for Open WebUI
-- `drive.example.com` -> handled separately by Nextcloud AIO
+- `drive.example.com` -> `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}` for Nextcloud AIO
 - `api.example.com` -> `http://traefik:80` only if you later choose to publish Ollama or another HTTP API
 
 Then set matching values in `~/homelab/.env`, for example:
@@ -229,9 +226,7 @@ COMPOSE_PROFILES=local-ollama,public-game,public-http
 OPENWEBUI_PUBLIC_HOST=chat.example.com
 OPENWEBUI_PUBLIC_URL=https://chat.example.com
 OPENWEBUI_CORS_ALLOW_ORIGIN=https://chat.example.com;http://127.0.0.1:3001;http://localhost:3001
-
-NEXTCLOUD_PUBLIC_HOST=drive.example.com
-NEXTCLOUD_PUBLIC_URL=https://drive.example.com
+NEXTCLOUD_AIO_APACHE_PORT=11000
 ```
 
 For Minecraft, keep using the `minecraft` container on port `25565` and expose it with the `public-game` Playit profile rather than Cloudflare HTTP routing.
@@ -249,12 +244,11 @@ For Minecraft, keep using the `minecraft` container on port `25565` and expose i
    - `OPENWEBUI_PUBLIC_HOST=chat.yourdomain.com`
    - `OPENWEBUI_PUBLIC_URL=https://chat.yourdomain.com`
    - `OPENWEBUI_CORS_ALLOW_ORIGIN=https://chat.yourdomain.com;http://127.0.0.1:3001;http://localhost:3001`
-   - `NEXTCLOUD_PUBLIC_HOST=drive.yourdomain.com`
-   - `NEXTCLOUD_PUBLIC_URL=https://drive.yourdomain.com`
+   - `NEXTCLOUD_AIO_APACHE_PORT=11000`
 5. If using Docker Ollama, set:
    - `OLLAMA_BASE_URL=http://ollama:11434`
 6. For Nextcloud AIO, complete first-time setup through `https://<pi-ip>:8081`. AIO bundles PostgreSQL, so you should not need to choose SQLite.
-7. In Cloudflare Tunnel, point `chat.yourdomain.com` to `http://traefik:80`. Configure `drive.yourdomain.com` separately for the AIO deployment you choose.
+7. In Cloudflare Tunnel, point `chat.yourdomain.com` to `http://traefik:80` and `drive.yourdomain.com` to `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}`.
 8. Run:
 
 ```bash
@@ -284,6 +278,7 @@ docker compose --env-file .env logs -f ollama
 ```bash
 curl -I http://127.0.0.1:3001
 curl -kI https://127.0.0.1:8081
+curl -I http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}
 curl -I http://127.0.0.1:11434
 ```
 
@@ -291,6 +286,7 @@ Expected meaning:
 
 - `3001` responds = Open WebUI container is up
 - `8081` responds = Nextcloud AIO setup interface is up
+- `${NEXTCLOUD_AIO_APACHE_PORT:-11000}` responds = Nextcloud AIO reverse-proxy target is up
 - `11434` responds = Ollama is reachable
 
 ### 3. Check Traefik routing before blaming Cloudflare
@@ -317,7 +313,7 @@ Things to verify:
 
 - the host `cloudflared` service is running
 - `chat` and `admin` hostnames point to `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
-- `drive` should not use the old repo-level Nextcloud reverse-proxy wiring
+- `drive` points to `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}`
 - the hostname in Cloudflare exactly matches the hostname in your `.env`
 
 ### 5. Check common app-specific issues
@@ -332,6 +328,7 @@ Nextcloud:
 
 - AIO includes PostgreSQL, so you should not need to choose SQLite during the AIO-managed setup path
 - use `https://<pi-ip>:8081` for the AIO interface, not your public domain
+- use `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}` as the reverse-proxy target
 - avoid mixing the old repo-level Nextcloud config mounts with AIO
 
 Minecraft:
@@ -347,6 +344,7 @@ Minecraft:
 - Traefik dashboard: `http://127.0.0.1:${TRAEFIK_DASHBOARD_PORT:-8088}`
 - Open WebUI direct local port: `http://127.0.0.1:3001`
 - Nextcloud AIO setup interface: `https://127.0.0.1:8081`
+- Nextcloud AIO reverse-proxy target: `http://127.0.0.1:${NEXTCLOUD_AIO_APACHE_PORT:-11000}`
 - Ollama direct local port: `http://127.0.0.1:11434`
 
 ## Quick Tunnel With DuckDNS TXT
