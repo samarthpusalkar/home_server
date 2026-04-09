@@ -10,9 +10,9 @@ Put each custom service in its own directory:
 
 1. Create `services/<service-name>/`.
 2. Add a service entry in `docker-compose.yml`.
-3. Add Traefik labels with a path variable:
-   - `traefik.http.routers.<service>.rule=Host(\`${PUBLIC_APP_HOST}\`) && PathPrefix(\`${<SERVICE>_PUBLIC_PATH}\`)`
-4. Add `<SERVICE>_PUBLIC_PATH` to `.env` on the Pi if you want it public.
+3. Add Traefik labels with a hostname variable:
+   - `traefik.http.routers.<service>.rule=Host(\`${<SERVICE>_PUBLIC_HOST}\`)`
+4. Add `<SERVICE>_PUBLIC_HOST` to `.env` on the Pi if you want it public. Use `example.com` placeholders in `.env.example` so the repo stays domain-agnostic.
 5. Commit and push to `main`.
 
 The deploy workflow will pull the repo on the Pi and run:
@@ -29,9 +29,7 @@ myservice:
   restart: unless-stopped
   labels:
     - "traefik.enable=true"
-    - "traefik.http.routers.myservice.rule=Host(`${PUBLIC_APP_HOST}`) && PathPrefix(`${MYSERVICE_PUBLIC_PATH:-/myservice}`)"
+    - "traefik.http.routers.myservice.rule=Host(`${MYSERVICE_PUBLIC_HOST:-myservice.example.com}`)"
     - "traefik.http.routers.myservice.entrypoints=web"
-    - "traefik.http.routers.myservice.middlewares=myservice-strip"
-    - "traefik.http.middlewares.myservice-strip.stripprefix.prefixes=${MYSERVICE_PUBLIC_PATH:-/myservice}"
     - "traefik.http.services.myservice.loadbalancer.server.port=8000"
 ```

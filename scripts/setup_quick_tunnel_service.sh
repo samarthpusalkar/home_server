@@ -96,3 +96,4 @@ sudo systemctl status "$SERVICE_NAME" --no-pager || true
 echo "Quick Tunnel service installed."
 echo "The host-level cloudflared process now starts on boot."
 echo "Edit ${HOMELAB_ROOT}/.env to control QUICK_TUNNEL_* and DUCKDNS_* values."
+echo "Set QUICK_TUNNEL_LOCAL_URL to the single local app you want to expose."

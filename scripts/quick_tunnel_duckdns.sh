@@ -71,7 +71,7 @@ refresh_config() {
   URL_FILE="$STATE_DIR/current_url.txt"
   LAST_PUBLISHED_URL_FILE="$STATE_DIR/last_published_url.txt"
   DUCKDNS_RESPONSE_FILE="$STATE_DIR/duckdns-response.txt"
-  LOCAL_URL="${COMMAND_ARG:-$(read_env_value QUICK_TUNNEL_LOCAL_URL "http://127.0.0.1:${traefik_host_port}")}"
+  LOCAL_URL="${COMMAND_ARG:-$(read_env_value QUICK_TUNNEL_LOCAL_URL "http://127.0.0.1:3001")}"
   TUNNEL_TIMEOUT_SECONDS="$(read_env_value TUNNEL_TIMEOUT_SECONDS "60")"
   TARGET_WAIT_SECONDS="$(read_env_value QUICK_TUNNEL_TARGET_WAIT_SECONDS "300")"
   CHECK_INTERVAL_SECONDS="$(read_env_value QUICK_TUNNEL_CHECK_INTERVAL_SECONDS "10")"
@@ -97,7 +97,7 @@ Usage:
   scripts/quick_tunnel_duckdns.sh publish-txt [quick_tunnel_url]
 
 Environment or .env values:
-  QUICK_TUNNEL_LOCAL_URL=http://127.0.0.1:8089
+  QUICK_TUNNEL_LOCAL_URL=http://127.0.0.1:3001
   QUICK_TUNNEL_STATE_DIR=~/homelab/.quick-tunnel
   QUICK_TUNNEL_TARGET_WAIT_SECONDS=300
   QUICK_TUNNEL_CHECK_INTERVAL_SECONDS=10
@@ -107,6 +107,7 @@ Environment or .env values:
 
 Notes:
   - Quick Tunnels are temporary and get a new trycloudflare URL after restart.
+  - They work best when pointed directly at one app, such as Open WebUI on port 3001.
   - DuckDNS cannot officially redirect to that URL.
   - This script publishes the active Quick Tunnel URL into DuckDNS TXT instead.
 EOF

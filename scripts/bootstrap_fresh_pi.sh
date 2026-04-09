@@ -46,8 +46,8 @@ echo "Next:"
 echo "1) Edit $HOMELAB_ROOT/.env with real secrets and hostnames."
 echo "2) If Docker says permission denied, run 'newgrp docker' once or log out/back in."
 echo "3) Run scripts/deploy.sh once to start the stack."
-echo "4) If using owned-domain Cloudflare Tunnel, set it to http://traefik:80."
-echo "5) If using Quick Tunnel, run scripts/setup_quick_tunnel_service.sh. It points to http://127.0.0.1:\${TRAEFIK_HOST_PORT:-8089}."
+echo "4) If using owned-domain Cloudflare Tunnel, create one public hostname per app and point each one to http://traefik:80."
+echo "5) If using Quick Tunnel, set QUICK_TUNNEL_LOCAL_URL to the single app you want and run scripts/setup_quick_tunnel_service.sh."
 echo "6) Install a GitHub self-hosted runner using scripts/setup_github_runner.sh."
 
 if [[ "$NEEDS_RELOGIN" -eq 1 ]]; then
