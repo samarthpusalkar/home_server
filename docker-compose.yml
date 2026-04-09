@@ -165,9 +165,9 @@ services:
       - "homelab.admin.description=File sync and collaboration app exposed through Traefik"
     volumes:
       - ${DATA_ROOT:-./data}/nextcloud:/var/www/html
-      - ./config/nextcloud/reverse-proxy.config.php:/var/www/html/config/reverse-proxy.config.php:ro
-    ports:
-      - "127.0.0.1:8081:80"
+      # - ./config/nextcloud/reverse-proxy.config.php:/var/www/html/config/reverse-proxy.config.php:ro
+    # ports:
+    #   - "127.0.0.1:8081:80"
     restart: unless-stopped
 
   playit:
@@ -191,3 +191,6 @@ services:
     volumes:
       - ${DATA_ROOT:-./data}/playit:/data
     restart: unless-stopped
+
+volumes:
+  ${DATA_ROOT:-./data}/nextcloud:
