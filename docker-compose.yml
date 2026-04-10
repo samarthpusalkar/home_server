@@ -135,7 +135,7 @@ services:
     restart: unless-stopped
 
   traefik:
-    image: traefik:v3.1
+    image: traefik:latest
     container_name: traefik
     profiles:
       - public-http
