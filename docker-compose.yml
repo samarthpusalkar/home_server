@@ -147,15 +147,14 @@ services:
       SKIP_DOMAIN_VALIDATION: "true"
       NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_PUBLIC_HOST}
       NEXTCLOUD_OVERWRITEHOST: ${NEXTCLOUD_PUBLIC_HOST}
-      NEXTCLOUD_OVERWRITEPROTOCOL: http
+      NEXTCLOUD_OVERWRITEPROTOCOL: https
       NEXTCLOUD_TRUSTED_PROXIES: 127.0.0.1/32,172.16.0.0/12
       NEXTCLOUD_AIO_APACHE_ADDITIONAL_LABELS: |
         traefik.enable=true
         traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_PUBLIC_HOST}`)
         traefik.http.routers.nextcloud.entrypoints=web
-        traefik.http.routers.nextcloud.middlewares=nextcloud-proto
-        traefik.http.services.nextcloud.loadbalancer.server.port=80
-        traefik.http.middlewares.nextcloud-proto.headers.customrequestheaders.X-Forwarded-Proto=https
+        traefik.http.services.nextcloud.loadbalancer.server.port=443
+        traefik.http.services.nextcloud.loadbalancer.server.scheme=https
         homelab.admin.managed=true
         homelab.admin.name=Nextcloud
         homelab.admin.exposure=traefik
