@@ -79,6 +79,27 @@ services:
       - "127.0.0.1:3001:8080"
     restart: unless-stopped
 
+  cardmanager:
+    image: samarthpusalkar/card-management-system:latest
+    container_name: cardmanager
+    environment:
+      PORT: 9902
+      DATA_ROOT: /data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cardmanager.rule=Host(`${CARD_MANAGER_PUBLIC_HOST}`)"
+      - "traefik.http.routers.cardmanager.entrypoints=web"
+      - "traefik.http.services.cardmanager.loadbalancer.server.port=9902"
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Card Manager"
+      - "homelab.admin.exposure=traefik"
+      - "homelab.admin.description=Web interface for ID card management exposed through Traefik"
+    volumes:
+      - ${DATA_ROOT:-./data}:/data
+    ports:
+      - "9902:9902"
+    restart: unless-stopped
+
   admin-control:
     build:
       context: .
