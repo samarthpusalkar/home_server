@@ -142,16 +142,14 @@ services:
     init: true
     container_name: nextcloud-aio-mastercontainer
     environment:
-      APACHE_PORT: 80
-      APACHE_IP_BINDING: 0.0.0.0
-      NEXTCLOUD_AIO_DISABLE_TLS: "true"
       SKIP_DOMAIN_VALIDATION: "true"
       NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_PUBLIC_HOST}
       NEXTCLOUD_OVERWRITEHOST: ${NEXTCLOUD_PUBLIC_HOST}
       NEXTCLOUD_OVERWRITEPROTOCOL: https
-      NEXTCLOUD_TRUSTED_PROXIES: 127.0.0.1/32,172.16.0.0/12
+      NEXTCLOUD_TRUSTED_PROXIES: 127.0.0.1 172.16.0.0/12
       NEXTCLOUD_AIO_APACHE_ADDITIONAL_LABELS: |
         traefik.enable=true
+        traefik.docker.network=homelab_default
         traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_PUBLIC_HOST}`)
         traefik.http.routers.nextcloud.entrypoints=web
         traefik.http.services.nextcloud.loadbalancer.server.port=443
@@ -159,17 +157,7 @@ services:
         homelab.admin.managed=true
         homelab.admin.name=Nextcloud
         homelab.admin.exposure=traefik
-        homelab.admin.description=Nextcloud app exposed through Traefik
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 2G
-    labels:
-      - "homelab.admin.managed=true"
-      - "homelab.admin.name=Nextcloud AIO Master"
-      - "homelab.admin.exposure=local-only"
-      - "homelab.admin.description=Nextcloud All-in-One master container with bundled PostgreSQL"
+        homelab.admin.description=Nextcloud via Traefik
     volumes:
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config
       - /var/run/docker.sock:/var/run/docker.sock
