@@ -84,7 +84,7 @@ services:
     container_name: cardmanager
     environment:
       PORT: 9902
-      DATA_ROOT: /data
+      DATA_ROOT: ${DATA_ROOT:-./data}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.cardmanager.rule=Host(`${CARD_MANAGER_PUBLIC_HOST}`)"
