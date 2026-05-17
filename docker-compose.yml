@@ -28,6 +28,7 @@ services:
 
   nitrox:
     image: qub1/nitrox-server:latest
+    platform: ${NITROX_PLATFORM:-linux/amd64}
     container_name: nitrox
     profiles:
       - nitrox
@@ -51,7 +52,6 @@ services:
       - "homelab.admin.exposure=playit"
       - "homelab.admin.description=Subnautica Nitrox server published through Playit on UDP 11000"
     ports:
-      - "${NITROX_PORT:-11000}:11000/tcp"
       - "${NITROX_PORT:-11000}:11000/udp"
     restart: unless-stopped
 
