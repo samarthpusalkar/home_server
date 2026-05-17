@@ -26,6 +26,35 @@ services:
       - "25565:25565"
     restart: unless-stopped
 
+  nitrox:
+    image: qub1/nitrox-server:latest
+    container_name: nitrox
+    profiles:
+      - nitrox
+    environment:
+      GROUP_ID: ${NITROX_GROUP_ID:-1000}
+      USER_ID: ${NITROX_USER_ID:-1000}
+      TIMEZONE: ${NITROX_TIMEZONE:-Asia/Kolkata}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    volumes:
+      - ${DATA_ROOT:-./data}/nitrox:/software/nitrox
+      - ${SUBNAUTICA_PATH:-./data/subnautica}:/software/subnautica
+    labels:
+      - "homelab.admin.managed=true"
+      - "homelab.admin.name=Nitrox"
+      - "homelab.admin.exposure=playit"
+      - "homelab.admin.description=Subnautica Nitrox server published through Playit on UDP 11000"
+    ports:
+      - "${NITROX_PORT:-11000}:11000/tcp"
+      - "${NITROX_PORT:-11000}:11000/udp"
+    restart: unless-stopped
+
   ollama:
     image: ollama/ollama:latest
     container_name: ollama

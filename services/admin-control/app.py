@@ -67,15 +67,32 @@ def utc_now() -> str:
 
 def ensure_data_files() -> None:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
+    seed_registry = json.loads(SEED_FILE.read_text(encoding="utf-8"))
+    seed_services = {
+        service["key"]: service
+        for service in seed_registry.get("services", [])
+        if isinstance(service, dict) and service.get("key")
+    }
     if not REGISTRY_FILE.exists():
-        REGISTRY_FILE.write_text(SEED_FILE.read_text(), encoding="utf-8")
+        REGISTRY_FILE.write_text(json.dumps(seed_registry, indent=2) + "\n", encoding="utf-8")
     else:
         raw_registry = json.loads(REGISTRY_FILE.read_text(encoding="utf-8"))
         services = raw_registry.get("services", [])
         filtered = [service for service in services if service.get("key") != "cloudflared"]
-        if len(filtered) != len(services):
+        registry_by_key = {
+            service["key"]: service
+            for service in filtered
+            if isinstance(service, dict) and service.get("key")
+        }
+        changed = len(filtered) != len(services)
+        for key, service in seed_services.items():
+            if key not in registry_by_key:
+                registry_by_key[key] = service
+                changed = True
+        if changed:
             REGISTRY_FILE.write_text(
-                json.dumps({"version": 1, "services": filtered}, indent=2) + "\n",
+                json.dumps({"version": 1, "services": [registry_by_key[key] for key in sorted(registry_by_key)]}, indent=2)
+                + "\n",
                 encoding="utf-8",
             )
     if not STATE_FILE.exists():

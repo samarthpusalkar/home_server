@@ -52,6 +52,16 @@
       "protected": false
     },
     {
+      "key": "nitrox",
+      "display_name": "Nitrox",
+      "container_name": "nitrox",
+      "description": "Subnautica Nitrox server published through Playit on UDP 11000",
+      "exposure": "playit",
+      "public_hosts": [],
+      "default_auto_start": true,
+      "protected": false
+    },
+    {
       "key": "playit",
       "display_name": "Playit",
       "container_name": "playit",

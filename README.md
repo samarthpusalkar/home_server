@@ -10,10 +10,11 @@ Optional public-facing pieces are disabled unless you turn them on in `~/homelab
 
 - empty `COMPOSE_PROFILES` = local-only stack
 - `COMPOSE_PROFILES=local-ollama` = run Ollama inside Docker on the Pi
+- `COMPOSE_PROFILES=nitrox` = enable the Subnautica Nitrox server
 - `COMPOSE_PROFILES=public-game` = enable Playit for games like Minecraft
 - `COMPOSE_PROFILES=public-http` = enable Traefik for host-based local HTTP routing behind your host Cloudflare tunnel
 - `COMPOSE_PROFILES=public-game,public-http` = games + Traefik router
-- `COMPOSE_PROFILES=local-ollama,public-game,public-http` = full public stack with Docker Ollama and host Cloudflare tunnel
+- `COMPOSE_PROFILES=local-ollama,public-game,public-http,nitrox` = full public stack with Docker Ollama, host Cloudflare tunnel, and Nitrox
 
 ## Public HTTP Model
 
@@ -52,6 +53,7 @@ When you use a Quick Tunnel instead of an owned-domain Cloudflare tunnel, `cloud
 Current built-in services in `docker-compose.yml`:
 
 - `minecraft`: Java server on TCP `25565`; best exposed with Playit, not Cloudflare HTTP
+- `nitrox`: Subnautica Nitrox server on UDP `11000`; best exposed with Playit, not Cloudflare HTTP
 - `ollama`: local LLM backend on `11434`; usually keep private and let Open WebUI talk to it
 - `openwebui`: web UI for Ollama and cloud AI providers; recommended public hostname `chat.example.com`
 - `nextcloud`: Nextcloud All-in-One with bundled PostgreSQL; recommended public hostname `drive.example.com`
@@ -66,6 +68,7 @@ Recommended subdomain map with `example.com` placeholders:
 - `admin.example.com` -> Admin Control
 - `api.example.com` -> optional future Ollama API exposure if you really want it public
 - no subdomain needed for `minecraft`; expose through Playit instead
+- no subdomain needed for `nitrox`; expose UDP `11000` through Playit instead
 - no subdomain needed for `traefik`; keep local on `127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
 - no subdomain needed for `playit`; it is a transport service, not a user-facing app
 
@@ -92,6 +95,7 @@ Inside Cloudflare Zero Trust -> Tunnels -> your tunnel -> Public Hostname, creat
 Do not create Cloudflare HTTP tunnel hostnames for:
 
 - `minecraft.yourdomain.com` if you mean actual Minecraft gameplay
+- `nitrox.yourdomain.com` if you mean actual Subnautica Nitrox gameplay
 - Traefik dashboard unless you intentionally secure and expose it later
 - Ollama unless you explicitly want the raw API reachable from the internet
 
@@ -170,6 +174,14 @@ If you only want Minecraft/public game access for now, you can leave Cloudflare 
 COMPOSE_PROFILES=public-game
 ```
 
+If you also want the Nitrox server, mount your Subnautica install into `SUBNAUTICA_PATH` and enable both Playit and Nitrox:
+
+```bash
+COMPOSE_PROFILES=public-game,nitrox
+SUBNAUTICA_PATH=/path/to/subnautica
+NITROX_PORT=11000
+```
+
 ## Ollama Mode
 
 This repo now defaults to using host-installed Ollama on the Raspberry Pi:
@@ -231,6 +243,8 @@ NEXTCLOUD_AIO_APACHE_PORT=11000
 
 For Minecraft, keep using the `minecraft` container on port `25565` and expose it with the `public-game` Playit profile rather than Cloudflare HTTP routing.
 
+For Nitrox, keep using the `nitrox` container on UDP port `11000` and expose it with Playit UDP forwarding.
+
 ## Bring-Up Checklist
 
 1. Copy `.env.example` to `.env` on the Pi.
@@ -240,6 +254,7 @@ For Minecraft, keep using the `minecraft` container on port `25565` and expose i
 3. Set profiles based on what you want running:
    - `COMPOSE_PROFILES=local-ollama,public-http` for Open WebUI + Nextcloud + Docker Ollama
    - add `public-game` if you also want Minecraft via Playit
+   - add `nitrox` if you also want the Subnautica Nitrox server
 4. Set app hostnames in `.env`:
    - `OPENWEBUI_PUBLIC_HOST=chat.yourdomain.com`
    - `OPENWEBUI_PUBLIC_URL=https://chat.yourdomain.com`
@@ -270,6 +285,7 @@ docker compose --env-file .env ps
 docker compose --env-file .env logs -f openwebui
 docker compose --env-file .env logs -f nextcloud
 docker compose --env-file .env logs -f playit
+docker compose --env-file .env logs -f nitrox
 docker compose --env-file .env logs -f ollama
 ```
 
@@ -337,6 +353,14 @@ Minecraft:
 - verify `public-game` is enabled
 - verify `PLAYIT_SECRET_KEY` is correct
 - inspect `playit` logs if the public endpoint is not being assigned
+
+Nitrox:
+
+- Cloudflare HTTP hostnames do not help for native Nitrox gameplay traffic
+- verify `nitrox` is included in `COMPOSE_PROFILES`
+- verify `SUBNAUTICA_PATH` points to your Subnautica install on the Pi
+- forward UDP `11000` in Playit, or the value of `NITROX_PORT` if you override it
+- inspect `nitrox` logs if the container starts but the game cannot connect
 
 ### 6. Useful local-only endpoints
 
@@ -550,10 +574,11 @@ If you do not own a domain yet:
 2. Set `PLAYIT_SECRET_KEY`
 3. Use the Quick Tunnel service only for temporary access to one app
 4. Keep in mind the public URL is still a random `trycloudflare.com` address
+5. Add `nitrox` to `COMPOSE_PROFILES` if you want the Subnautica server too
 
 If you later buy a domain:
 
 1. Change to `COMPOSE_PROFILES=public-game,public-http`
 2. Create one Cloudflare Tunnel public hostname per app, all pointing at `http://127.0.0.1:${TRAEFIK_HOST_PORT:-8089}`
-3. Keep Minecraft on its Playit static domain
+3. Keep Minecraft and Nitrox on Playit native game forwarding
 4. Start exposing selected web apps by hostname
