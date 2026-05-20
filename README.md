@@ -53,13 +53,13 @@ When you use a Quick Tunnel instead of an owned-domain Cloudflare tunnel, `cloud
 Current built-in services in `docker-compose.yml`:
 
 - `minecraft`: Java server on TCP `25565`; best exposed with Playit, not Cloudflare HTTP
-- `nitrox`: Subnautica Nitrox server on UDP `11000`; best exposed with Playit, not Cloudflare HTTP
+- `nitrox`: Subnautica Nitrox server on UDP `11000` with a local config editor on `8080`; gameplay is best exposed with Playit, not Cloudflare HTTP
 - `ollama`: local LLM backend on `11434`; usually keep private and let Open WebUI talk to it
 - `openwebui`: web UI for Ollama and cloud AI providers; recommended public hostname `chat.example.com`
 - `nextcloud`: Nextcloud All-in-One with bundled PostgreSQL; recommended public hostname `drive.example.com`
 - `admin-control`: protected service control panel; recommended public hostname `admin.example.com`
 - `traefik`: local HTTP router for subdomain-based routing; usually keep private and use it behind Cloudflare Tunnel
-- `playit`: public TCP/UDP agent for games like Minecraft
+- `playit`: public TCP/UDP agent for games like Minecraft and Nitrox
 
 Recommended subdomain map with `example.com` placeholders:
 
@@ -178,8 +178,10 @@ If you also want the Nitrox server, mount your Subnautica install into `SUBNAUTI
 
 ```bash
 COMPOSE_PROFILES=public-game,nitrox
-SUBNAUTICA_PATH=/path/to/subnautica
+NITROX_CONFIG_PATH=~/subnautica-server/config
+SUBNAUTICA_PATH=~/subnautica-server/game
 NITROX_PORT=11000
+NITROX_CONFIG_EDITOR_PORT=8080
 ```
 
 ## Ollama Mode
@@ -243,7 +245,7 @@ NEXTCLOUD_AIO_APACHE_PORT=11000
 
 For Minecraft, keep using the `minecraft` container on port `25565` and expose it with the `public-game` Playit profile rather than Cloudflare HTTP routing.
 
-For Nitrox, keep using the `nitrox` container on UDP port `11000` and expose it with Playit UDP forwarding.
+For Nitrox, keep using the `nitrox` container on UDP port `11000` and expose it with Playit UDP forwarding. The optional config editor is local HTTP on `http://<pi-ip>:8080` by default.
 
 ## Bring-Up Checklist
 
@@ -358,8 +360,10 @@ Nitrox:
 
 - Cloudflare HTTP hostnames do not help for native Nitrox gameplay traffic
 - verify `nitrox` is included in `COMPOSE_PROFILES`
-- verify `SUBNAUTICA_PATH` points to your Subnautica install on the Pi
+- verify `SUBNAUTICA_PATH` points to the mounted Subnautica game files on the Pi
+- verify `NITROX_CONFIG_PATH` points to the persistent Nitrox config directory
 - forward UDP `11000` in Playit, or the value of `NITROX_PORT` if you override it
+- open `http://<pi-ip>:8080` for the config editor, or the value of `NITROX_CONFIG_EDITOR_PORT` if you override it
 - inspect `nitrox` logs if the container starts but the game cannot connect
 
 ### 6. Useful local-only endpoints

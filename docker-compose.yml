@@ -27,32 +27,31 @@ services:
     restart: unless-stopped
 
   nitrox:
-    image: qub1/nitrox-server:latest
-    platform: ${NITROX_PLATFORM:-linux/amd64}
+    image: cuteminded/nitrox-server:latest
     container_name: nitrox
     profiles:
       - nitrox
     environment:
-      GROUP_ID: ${NITROX_GROUP_ID:-1000}
-      USER_ID: ${NITROX_USER_ID:-1000}
-      TIMEZONE: ${NITROX_TIMEZONE:-Asia/Kolkata}
+      TZ: ${NITROX_TIMEZONE:-Asia/Kolkata}
+      CONFIG_EDITOR: ${NITROX_CONFIG_EDITOR:-true}
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "1.0"
         reservations:
-          memory: 256M
+          memory: 512M
     volumes:
-      - ${DATA_ROOT:-./data}/nitrox:/software/nitrox
-      - ${SUBNAUTICA_PATH:-./data/subnautica}:/software/subnautica
+      - ${NITROX_CONFIG_PATH:-~/subnautica-server/config}:/app/config/Nitrox
+      - ${SUBNAUTICA_PATH:-~/subnautica-server/game}:/mnt/subnautica
     labels:
       - "homelab.admin.managed=true"
       - "homelab.admin.name=Nitrox"
       - "homelab.admin.exposure=playit"
-      - "homelab.admin.description=Subnautica Nitrox server published through Playit on UDP 11000"
+      - "homelab.admin.description=Subnautica Nitrox server with config editor; gameplay published through Playit on UDP 11000"
     ports:
       - "${NITROX_PORT:-11000}:11000/udp"
+      - "${NITROX_CONFIG_EDITOR_PORT:-8080}:8080"
     restart: unless-stopped
 
   ollama:

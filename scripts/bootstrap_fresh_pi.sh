@@ -39,7 +39,8 @@ if [[ ! -f "$HOMELAB_ROOT/.env" ]]; then
   cp "$HOMELAB_ROOT/.env.example" "$HOMELAB_ROOT/.env"
 fi
 
-mkdir -p "$HOMELAB_ROOT/data"/{minecraft,nitrox,subnautica,ollama,openwebui,nextcloud,playit,admin-control}
+mkdir -p "$HOMELAB_ROOT/data"/{minecraft,ollama,openwebui,nextcloud,playit,admin-control}
+mkdir -p "$HOME/subnautica-server"/{config,game}
 
 echo "Bootstrap complete."
 echo "Next:"

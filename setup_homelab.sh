@@ -55,13 +55,15 @@ else
 fi
 
 echo "Creating data directories under $DATA_ROOT_PATH..."
-for service_dir in minecraft nitrox subnautica ollama openwebui nextcloud playit; do
+for service_dir in minecraft ollama openwebui nextcloud playit; do
   sudo mkdir -p "$DATA_ROOT_PATH/$service_dir"
 done
+sudo mkdir -p "$HOME/subnautica-server"/{config,game}
 
 echo "Fixing permissions..."
 sudo chown -R $USER:$USER "$HOMELAB_ROOT"
 sudo chown -R $USER:$USER "$DATA_ROOT_PATH"
+sudo chown -R $USER:$USER "$HOME/subnautica-server"
 
 chmod +x "$HOMELAB_ROOT"/*.sh
 chmod +x "$HOMELAB_ROOT"/scripts/*.sh 2>/dev/null || true
