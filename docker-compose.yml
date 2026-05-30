@@ -1,7 +1,7 @@
 services:
 
   minecraft:
-    image: itzg/minecraft-server:java21
+    image: itzg/minecraft-server:latest
     container_name: minecraft
     environment:
       EULA: "TRUE"
