@@ -7,7 +7,7 @@ services:
       EULA: "TRUE"
       MEMORY: ${MC_MEMORY:-2G}
       TYPE: ${MC_TYPE:-VANILLA}
-      VERSION: ${MC_VERSION:-1.21.5}
+      VERSION: "1.21.5"
       ONLINE_MODE: "FALSE"
     deploy:
       resources:
